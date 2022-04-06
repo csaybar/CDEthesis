@@ -1,0 +1,48 @@
+`r if(knitr:::is_latex_output()) '\\startappendices'`
+
+`r if(!knitr:::is_latex_output()) '# (APPENDIX) Appendix {-}'` 
+
+<!-- If you feel it necessary to include an appendix, it goes here. The first appendix should include the commands above. -->
+
+
+# Appendix - Code
+
+This first appendix includes the non-stationary gaussian processes in Gpytorch:
+
+**In 02-rmd-basics-code.Rmd**
+
+```{r ref.label='chunk-parts', eval=FALSE, echo = TRUE}
+```
+
+**And here's another one from the same chapter, i.e. Chapter \@ref(code):**
+
+```{r ref.label='oxford-logo-rotated', eval=FALSE, echo = TRUE}
+```
+
+
+
+# Appendix - Figures
+
+\setcounter{figure}{0}
+\makeatletter 
+\renewcommand{\thefigure}{S\@arabic\c@figure}
+\makeatother
+
+<!-- FIGURE S2 -->
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\linewidth]{figures/extra/figureS2.png}
+	\caption{XXXX}
+	\label{fig:figureS02}
+\end{figure}
+
+
+<!-- FIGURE S3 -->
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\linewidth]{figures/extra/figureS3.png}
+	\caption{XXXX}
+	\label{fig:figureS03}
+\end{figure}
+
+
