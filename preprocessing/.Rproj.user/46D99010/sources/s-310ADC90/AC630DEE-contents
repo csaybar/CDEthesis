@@ -1,0 +1,9 @@
+library(googlesheets4)
+library(tidyxl)
+library(tidyr)
+examples <- "/home/csaybar/Downloads/cloud_type.xlsx"
+xlsx_formats(examples)
+glimpse(xlsx_validation(examples)[1, ])
+
+googlesheets4::read_sheet("1-FqkNdWfRp6pm4-bgCLiTwhOGEgOB9MuLR4GQnIR-5w")
+
