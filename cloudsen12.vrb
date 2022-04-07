@@ -1,0 +1,9 @@
+\frametitle{Next steps:}
+\begin{itemize}
+		\item Finish to write the chapter one (cloudSEN12 description).
+		\item Create predictors: $X$
+		\item Create a tabular dataset with the columns: $x, y, M, cc (target)$.
+		\item Implement the algorithm described above.
+		\item Create a $GP$ model for each question.
+		\item Write chapter two.
+	\end{itemize}
