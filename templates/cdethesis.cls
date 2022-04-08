@@ -418,10 +418,10 @@
 % JEM: for crazy multi character set quotes and Unicode and all
 \usepackage{lmodern}
 \usepackage{charter}
+\usepackage[greek,latin,english]{babel}
 \usepackage[expert]{mathdesign}
 \usepackage[LGR,TS1,T1]{fontenc}
 \usepackage[utf8]{inputenc}
-\usepackage[greek,latin,english]{babel}
 \usepackage{csquotes}
 \hyphenpenalty=500
 \def\longs{{\fontencoding{TS1}\selectfont s}}

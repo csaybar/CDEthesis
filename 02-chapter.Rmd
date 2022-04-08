@@ -48,9 +48,81 @@ resolution. The TPR data used corresponds to the 2007–2016 period, the cloud t
 ### MODIS
 
 
-## Methods
+## Methodology
+<!---
+Problem statement
+-->
 
-### Machine learning approach
+The aim is to create a model that predict cloud masking error in a 1° x 1° worldwide grid given a $d-$dimensional training set of $n$ samples and real-valued targets such that $x_i\; and \; y_i \in \rm^{d}, \forall_i \; \epsilon \; \{1, ..., n\}$. In our regression problem setup, we define $n$ a set of 10000 independent IPs refered to the high-quality cloudSEN12 dataset with 20 static predictors: latitude, longitude, land use, cloud cover, elevation, cloud frequency, intra-annual variability, cloud type and sun and satellite position. We propose the use of a deep kernel learning (DKL) regression method based in the combination of artificial neural networks (ANN) and a gaussian processes (GP). While ANN captures the non-stationary and hierarchical structure, the flexibility of GP yield characterized by means of a non-parametric modelling, but also an estimation of their uncertainty. A general introduction to GP can be found in Rasmussen and Williams (2006). In the following we briefly review the standard GP, DKL, and the strategy followed to makes cloud error predictions at worldwide. 
+
+### Gaussian process regresion
+
+GPs assume a prior distribution of functions over the $\mathrm{COT}_{k}$ observations y.
+
+\begin{equation}
+    \begin{aligned}
+        f(\mathbf{x}) & \sim 
+            \mathcal{G}_{y}\left(
+                m(\mathbf{x}), 
+                k\left(\mathbf{x}, \mathbf{x}^{\prime}\right)\right
+            ) \\
+        y &=f(\mathbf{x})+\epsilon, \quad 
+        \epsilon \sim \mathcal{N}\left(0, \sigma^{2}\right)
+    \end{aligned} \label{eq:6}
+\end{equation}
+
+where, $\mathbf{x} \in \mathbb{R}^{d}$ is a feature vector, $y \in \mathbb{R}$ is observation, and $\epsilon$ is noise in observations with variance $\sigma^{2} . m(\mathbf{x}): \mathbb{R}^{d} \rightarrow \mathbb{R}$ is the prior mean function and $k\left(\mathbf{x}, \mathbf{x}^{\prime}\right): \mathbb{R}^{d} \times \mathbb{R}^{d} \rightarrow \mathbb{R}$ is the prior covariance function. In practice, we assume constant mean function without loss of generality. A well-known covariance function (kernel) is Radial Basis Function.
+
+\begin{equation}
+k_{RBF}\left(\mathbf{x}, \mathbf{x}^{\prime}\right) = 
+        \sigma_{f}^{2} 
+        \exp \left(
+                \frac{
+                        -\left\|\mathbf{x}-\mathbf{x}^{\prime}\right\|_{2}^{2}
+                }{
+                        2 \ell^{2}
+                }\right
+             ) \label{eq:7}
+\end{equation}
+
+Where $\sigma_{f}^{2}$ is kernel variance and $\ell$ is length scale. In the current setting, $\boldsymbol{\theta}=\left\langle\sigma_{f}, \sigma, \ell\right\rangle$ are the model hyperparameters. GP hyperparameters are learned during the training process. The negative log marginal likelihood $\mathcal{L}(\theta)$ is minimized with respect to training data points $\left(X_{n}, \mathbf{y}_{n}\right)$ to optimize the hyperparameters.
+
+\begin{equation}
+\mathcal{L}(\boldsymbol{\theta}) = \frac{1}{2}\left
+    [
+        \mathbf{y}^{T} K_{y}^{-1} \mathbf{y} +
+        \log \left|K_{y}\right| +
+        n\log(2\pi)\right
+    ] \label{eq:8}
+\end{equation}
+
+Where $K_{y}=k\left(X_{n}, X_{n}\right)+\sigma^{2} I_{n}$. Post training, predictive distribution of observations for test points $X_{t}$ is given as
+
+\begin{equation}
+\mathbf{f}^{*} \sim \mathcal{N}\left(
+    K^{* T} K_{y}^{-1} \mathbf{y}, K^{* *}-K^{* T} K_{y}^{-1} K^{*}
+    \right
+) \label{eq:9}
+\end{equation}
+
+where $K^{*}$ is $n \times t$ covariance matrix between train and test points and $K^{* *}$ is $t \times t$ covariance matrix among test points.
+
+### Deep kernel learning
+
+In addition to sparse GP, moved one step further and proposed to embed deep 
+neural networks (DNNs) with GPs to learn more fexible representations. Te kernel
+function transforms $k(x_i, x_j|\theta)$ to $k(g(x_i,w), g(x_j,w)|\theta, w)$, 
+where $\theta$ are the kernel hyperparameters, $g(.)$ ) is a non-linear DNN, 
+and $w$ are the parametrized weights of the network. Terefore, the DNN acts as 
+a feature extractor to represent samples as latent vectors, and GPs can make 
+inferences based on the learned latent features.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1\linewidth]{figures/chapter02/figure02.png}
+	\caption{Number of hand-crafted pixel annotations between different cloud detection datasets. All the labeled pixels in the CloudSEN12 no-annotation group come from cloud-free IPs.}
+	\label{fig:figure02}
+\end{figure}
 
 ### Model set-up and training
 
