@@ -169,7 +169,6 @@
 \newcommand*{\bibtitle}{Bibliography}
 
 \addbibresource{bibliography/references.bib}
-\addbibresource{bibliography/additional-references.bib}
 
 
 % This makes the bibliography left-aligned (not 'justified') and slightly smaller font.
@@ -469,71 +468,66 @@ resolution. The TPR data used corresponds to the 2007--2016 period, the cloud ty
 \hypertarget{methodology}{%
 \section{Methodology}\label{methodology}}
 
-The aim is to create a model that predict cloud masking error in a 1° x 1° worldwide grid given a \(d-\)dimensional training set of \(n\) samples and real-valued targets such that \(x_i\; and \; y_i \in \rm^{d}, \forall_i \; \epsilon \; \{1, ..., n\}\). In our regression problem setup, we define \(n\) a set of 10000 independent IPs refered to the high-quality cloudSEN12 dataset with 20 static predictors: latitude, longitude, land use, cloud cover, elevation, cloud frequency, intra-annual variability, cloud type and sun and satellite position. We propose the use of a deep kernel learning (DKL) regression method based in the combination of artificial neural networks (ANN) and a gaussian processes (GP). While ANN captures the non-stationary and hierarchical structure, the flexibility of GP yield characterized by means of a non-parametric modelling, but also an estimation of their uncertainty. A general introduction to GP can be found in Rasmussen and Williams (2006). In the following we briefly review the standard GP, DKL, and the strategy followed to makes cloud error predictions at worldwide.
+This study aims to create a model that predicts cloud masking error in
+a 1° x 1° worldwide grid system \(y^*\) from a set of predictors \(x^*\). The regression model \(\mathbf{f}\) is trained using a dataset, \(\mathcal{D} = \{x_i, y_i\}^{N}_{i=1}\) with \(x_i\) and \(y_i \in \mathbb{R}\). The segment \(x_i\) represents a vector of \(1 \times m\) predictors (Table X), \(y_i\) is the metric error values (see section \ref{section:metrics}) determined from comparing cloudSEN12 and Sen2Cor cloud masking results, and \(N\) the number of observations set as 10000. Only high-quality IPs are used in this study because of the risk of bias due to scene incompleteness in scribble annotation. A detailed description of the CloudSEN12 dataset is given in chapter one. We propose the use of a deep kernel learning (DKL) regression. It combines deep neural networks (DNN) with standard gaussian process regression (GP). While ANN captures the non-stationary and hierarchical structure, GP permits the estimation of their uncertainty considering the local autocorrelation of the observations. \cite{rasmussen2003gaussian} provide a detail description of GP. The standard GP, DKL, and the approach used to create worldwide cloud error predictions are briefly reviewed in the following sections.
 
 \hypertarget{gaussian-process-regresion}{%
 \subsection{Gaussian process regresion}\label{gaussian-process-regresion}}
 
-GPs assume a prior distribution of functions over the \(\mathrm{COT}_{k}\) observations y.
+Standard Gaussian Process Regression (GP) models is a expressive probabilistic model in which both training and testing data points are regarded samples of a joint multivariate normal distribution (\cite{williams2006gaussian}). As other regression models, a GP model is formed by noisy variables of the true underlying function \(\mathbf{f}\) that projects the vector space \(X\) into real-valued targets \(y\), i.e.~\(y = f(\mathbf{x}) + \epsilon\). The element \(\epsilon\) represents the noise variables with \(\mathcal{N}(0, \sigma^{2})\). In a GP model we assume that all the finite dimensional distributions \(f(\mathbf{x})\) are normally distributed with \(\mu\) as a mean and \(K_{XX}|\gamma\) as the prior covariance matrix. The covariance (kernel) matrix regulates the smoothness of GPs and its values are implicitly dependent on the kernel hyperparameters \(\gamma\). In this specific case, the estimation of \(f(\mathbf{x})\) can be expressed given by:
 
 \begin{equation}
-    \begin{aligned}
-        f(\mathbf{x}) & \sim 
-            \mathcal{G}_{y}\left(
-                m(\mathbf{x}), 
-                k\left(\mathbf{x}, \mathbf{x}^{\prime}\right)\right
-            ) \\
-        y &=f(\mathbf{x})+\epsilon, \quad 
-        \epsilon \sim \mathcal{N}\left(0, \sigma^{2}\right)
-    \end{aligned} \label{eq:6}
+\begin{aligned}
+\mathbf{f} = f(\mathbf{x}) = [f(x_1), ...., f(x_m)]^\top & \sim 
+\mathcal{GP}\left(
+  \mu, K_{XX}|\gamma\right
+) \\
+\end{aligned} \label{eq:1}
 \end{equation}
 
-where, \(\mathbf{x} \in \mathbb{R}^{d}\) is a feature vector, \(y \in \mathbb{R}\) is observation, and \(\epsilon\) is noise in observations with variance \(\sigma^{2} . m(\mathbf{x}): \mathbb{R}^{d} \rightarrow \mathbb{R}\) is the prior mean function and \(k\left(\mathbf{x}, \mathbf{x}^{\prime}\right): \mathbb{R}^{d} \times \mathbb{R}^{d} \rightarrow \mathbb{R}\) is the prior covariance function. In practice, we assume constant mean function without loss of generality. A well-known covariance function (kernel) is Radial Basis Function.
+Conditioning the joint normal distribution by the output values at the training points
+(\(X\) and \(\mathbf{y}\)), the posterior distribution of the output values \(f(\mathbf{x}_{*})\) at the test data point \(X_*\) can be inferred as:
 
 \begin{equation}
-k_{RBF}\left(\mathbf{x}, \mathbf{x}^{\prime}\right) = 
-        \sigma_{f}^{2} 
-        \exp \left(
-                \frac{
-                        -\left\|\mathbf{x}-\mathbf{x}^{\prime}\right\|_{2}^{2}
-                }{
-                        2 \ell^{2}
-                }\right
-             ) \label{eq:7}
+\begin{aligned}
+f(\mathbf{x}_{*}) \mid X_{*}, X, \mathbf{y}, \boldsymbol{\gamma}, \sigma^{2} \sim \mathcal{N}(\mu^{*}, \Sigma^{*}), \\
+\mu^{*} = \mu_{X_*} + K_{X_*X}\widehat{K}_{XX}^{-1}\mathbf{y}, \\
+\Sigma^{*} = K_{X_*X_*} - K_{X_*X}\widehat{K}_{XX}^{-1}K_{XX_*}
+\end{aligned} \label{eq:2}
 \end{equation}
 
-Where \(\sigma_{f}^{2}\) is kernel variance and \(\ell\) is length scale. In the current setting, \(\boldsymbol{\theta}=\left\langle\sigma_{f}, \sigma, \ell\right\rangle\) are the model hyperparameters. GP hyperparameters are learned during the training process. The negative log marginal likelihood \(\mathcal{L}(\theta)\) is minimized with respect to training data points \(\left(X_{n}, \mathbf{y}_{n}\right)\) to optimize the hyperparameters.
+A hat denotes an added diagonal, i.e.~\(\widehat{K}_{XX} = K_{XX} + + \sigma^{2}I\). \(\mu^{*}\) and \(\Sigma^{*}\) are the posterior mean and covariance matrix respectively. The matrices of the form \(K_{X_iX_j}\) denote cross-covariances between the train (\(X\)) and test (\(X_*\)) vector spaces. The hyperparameters \(\lambda\) of the kernel are usually learned directly by minimizing the negative log marginal likelihood \(\mathcal{L}(\theta)\) with respect to training observations:
 
 \begin{equation}
-\mathcal{L}(\boldsymbol{\theta}) = \frac{1}{2}\left
-    [
-        \mathbf{y}^{T} K_{y}^{-1} \mathbf{y} +
-        \log \left|K_{y}\right| +
-        n\log(2\pi)\right
-    ] \label{eq:8}
+\begin{aligned}
+\mathcal{L} = - \log p(\mathbf{y} \mid \gamma, X) \propto \mathbf{y}^{\top} \widehat{K}_{XX}^{-1} \mathbf{y} + \log \left|\widehat{K}_{X X}\right|, \\
+\frac{\partial \mathcal{L}}{\partial \theta} = \mathbf{y}^{\top} \widehat{K}_{XX} \frac{\partial \widehat{K}_{X X}^{-1}}{\partial \theta} \widehat{K}_{X X} \mathbf{y}-\operatorname{tr}\left\{\widehat{K}_{X X}^{-1} \frac{\partial \widehat{K}_{XX}}{\partial \theta}\right\}
+\label{eq:3}
+\end{aligned}
 \end{equation}
 
-Where \(K_{y}=k\left(X_{n}, X_{n}\right)+\sigma^{2} I_{n}\). Post training, predictive distribution of observations for test points \(X_{t}\) is given as
-
-\begin{equation}
-\mathbf{f}^{*} \sim \mathcal{N}\left(
-    K^{* T} K_{y}^{-1} \mathbf{y}, K^{* *}-K^{* T} K_{y}^{-1} K^{*}
-    \right
-) \label{eq:9}
-\end{equation}
-
-where \(K^{*}\) is \(n \times t\) covariance matrix between train and test points and \(K^{* *}\) is \(t \times t\) covariance matrix among test points.
+The main bottleneck for kernel learning is solve the linear system \(\widehat{K}_{XX}^{-1}y\) in equation \ref{eq:3}. The standard approach is to compute the Cholesky decomposition of the matrix \(\widehat{K}_{XX}^{-1}\). The Cholesky decomposition's core algorithm
+uses a divide-and-conquer approach that is inefficient on GPU acceleration (\cite{krishnamoorthy2013matrix}). Furthermore, it requires \(\mathcal{O}(n^{3})\) computation and \(\mathcal{O}(n2)\) storage for GP inference and kernel learning (\cite{rasmussen2003gaussian}). To address the above challenges, several approaches to scaling up GP inference have been proposed (\cite{gardner2018gpytorch, cunningham2008fast, dong2017scalable, bach2013sharp, wilson2015thoughts}). In this paper, we address the GP inference issue by using the Blackbox Matrix-Matrix multiplication inference (BBMM, \cite{gardner2018gpytorch}). BBMM use preconditioned batched conjugate gradients to solve linear systems, reducing the asymptotic time complexity of GP inference from \(\mathcal{O}(n^{3})\) to \(\mathcal{O}(n^{2})\). Besides, it overcomes memory constraints by divvying the kernel matrix to perform matrix-vector multiplication (MVM, \cite{demmel1997applied}) without having to explicitly construct the kernel matrix, reducing the memory requirement to \(\mathcal{O}(n)\). Finally, BBMM parallelize partitioned MVMs across multiple core, enabling a better use of GPU hardware in comparison to the Cholesky factorization.
 
 \hypertarget{deep-kernel-learning}{%
 \subsection{Deep kernel learning}\label{deep-kernel-learning}}
 
-In addition to sparse GP, moved one step further and proposed to embed deep
-neural networks (DNNs) with GPs to learn more fexible representations. Te kernel
-function transforms \(k(x_i, x_j|\theta)\) to \(k(g(x_i,w), g(x_j,w)|\theta, w)\),
-where \(\theta\) are the kernel hyperparameters, \(g(.)\) ) is a non-linear DNN,
-and \(w\) are the parametrized weights of the network. Terefore, the DNN acts as
-a feature extractor to represent samples as latent vectors, and GPs can make
-inferences based on the learned latent features.
+DKL is a probabilistic deep network that simultaneously learns a feature
+extractor and a Gaussian process on the feature space (cite). The network's
+structure is depicted in Figure X. The deep non-linear feature extractor
+\(\mathbf{h(x,w)}\), parametrized by weights \(\mathbf{w}\), is applied to the
+observed input variable \(\mathbf{x}\). Next, the DNN outputs are modeled using
+\(\mathcal{GP}\) by:
+
+\begin{equation}
+f(\mathbf{x}) \sim \mathcal{GP}(
+    \mu(\mathbf{h_w(x)}),
+    k_{\gamma}(\mathbf{h_w(x)}, \mathbf{h_w({x}')})
+)
+\end{equation}
+
+All parameters of the model, including neural network weights \(\mathbf{w}\) and kernel parameters \(\mathbf{\gamma}\), are optimized end-to-end via backpropagation to minimize the
+negative log marginal likelihood (equation \ref{eq:3}).
 
 \begin{figure}[!h]
     \centering
@@ -545,8 +539,14 @@ inferences based on the learned latent features.
 \hypertarget{model-set-up-and-training}{%
 \subsection{Model set-up and training}\label{model-set-up-and-training}}
 
+For our deep kernel learning model, we used deep neural networks which produce
+C-dimensional top-level features. Here C is the number of classes. We place a Gaussian process on each dimension of these features. We used RBF base kernels. The additive GP layer is then followed by a linear mixing layer A R C×C . We initialized A to be an identity matrix, and optimized in the joint learning procedure to recover cross-dimension correlations from data.
+We first train a deep neural network using SGD with the softmax loss objective, and rectified linear activation functions. After the neural network has been pre-trained, we fit an additive KISS-GP layer, followed by a linear mixing layer, using the top-level features of the deep network as inputs. Using this pre-training initialization, our joint SV-DKL model of section 3 is then trained through the stochastic variational method of section 4 which jointly optimizes all the hyperparameters of the deep kernel (including all network weights), as well as the variational parameters, by backpropagating derivatives through the proposed marginal likelihood lower bound of the additive Gaussian process in section 4. In all experiments, we use a relatively large mini-batch size (specified according to the full data size), enabled by the proposed structure exploiting variational inference procedures. We achieve good performance setting the number of samples T = 1 in Eq. 4 for expectation estimation in variational inference, which provides additional confirmation for a similar observation in {[}14{]}.
+
 \hypertarget{model-metrics}{%
 \subsection{Model metrics}\label{model-metrics}}
+
+\label{section:metrics}
 
 \hypertarget{model-predictions}{%
 \subsection{Model predictions}\label{model-predictions}}
