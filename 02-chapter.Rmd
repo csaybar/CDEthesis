@@ -21,9 +21,16 @@ What am I in the eyes of most people - a nonentity, an eccentric or an unpleasan
   
 Cloud masking is an essential pre-processing for any application of optical remote sensing imagery. Various coarse-resolution cloud cover datasets (\cite{sassen2008classifying, winker2010calipso, Wilson2016}) estimate the worldwide multi-annual cloud occurrence percentage to be around 0.6 ± 0.2, with hotspots in tropical and subtropical forests. Assuming these products are indicative of Sentinel-2 cloud conditions, we can anticipate that more than half of the pixels will need to be removed, i.e. masked out, in order to avoid distortions in further analyses. Given that cloud masking can be interpreted as a statistical classification problem, the confusion matrix can be used to distinguish between two distinct types of errors. On the one hand, cloud omission errors (cloud as non-cloud) can lead to inconsistencies in time series of surface reflectance pixels, whereas cloud commission (clear as non-cloud) reduces the number of valid observations and, as a result, the frequency of cloud-free data (\cite{skakun2022cloud}). Cloud masking techniques are aimed to have a balance between commission and omission errors. Over the last three decades, a plethora of cloud masking methods have been presented (\cite{Hagolle2017, Domnich2021, Louis2016, Qiu2019, richter2019atmospheric, jan_wevers_2021_5788067, Lopez-Puigdollers2021, frantz2019force}). These methods can be classified into two main categories: knowledge-driven (KD) and data-driven (DD). While KD emphasizes the use of physical rules formulated on spectral and contextual features, DD is subjected to the exigency of large pixel-level annotation and costly computational requirements to distinguish cloud versus non-cloud regions.
 
-Only a few studies have attempted to compare the various Sentinel-2 cloud masking methods. For instance, \cite{Cilli} compare DD with KD methods by analyzing 135 Sentinel-2 images distributed worldwide. They concluded that DD methods outperform KD methods. According to their experiments, $10^{4}$ manually labeled pixels are sufficient for train machine learning algorithms to operate accurately cloud masking. Nonetheless, it is well established that DD models are highly dependent on the training dataset (\cite{Lopez-Puigdollers2021}. As a result, the comparison could be unfair, especially if the KD methods have not been as well calibrated to the dataset. \cite{Zekoll2021} compare three KD threshold-based: FMask, ATCOR, and Sen2Cor using a sample-based dataset. The results show that Sen2Cor outperforms the other methods. However, human-made datasets, especially those created by sampling, can be positively skewed if we consider that humans tend to overlook unpleasant information such as cloud borders (ostrich-effect, \cite{Valdez2017}). Using four different datasets, the Cloud Mask Intercomparison eXercise (CMIX) recently compared ten cloud detection algorithms. They suggested that no single algorithm performed better than the others \cite{Skakun2022}. Similar conclusions are found in \cite{tarrio2020comparison} by analyzing 28 images over six Sentinel-2 tiles in Africa and Europe.
+Only a few studies have attempted to compare the various Sentinel-2 cloud masking methods. For instance, \cite{Cilli} compare DD with KD methods by analyzing 135 Sentinel-2 images distributed worldwide. They concluded that DD methods outperform KD methods. According to their experiments, $10^{4}$ manually labeled pixels are sufficient for train machine learning algorithms to operate accurately cloud masking. Nonetheless, it is well established that DD models are highly dependent on the training dataset (\cite{Lopez-Puigdollers2021}). As a result, the comparison could be unfair, especially if the KD methods have not been as well calibrated to the dataset. \cite{Zekoll2021} compare three KD threshold-based: FMask, ATCOR, and Sen2Cor using a sample-based dataset. The results show that Sen2Cor outperforms the other methods. However, human-made datasets, especially those created by sampling, can be positively skewed if we consider that humans tend to overlook unpleasant information such as cloud borders (ostrich-effect, \cite{Valdez2017}). Using four different datasets, the Cloud Mask Intercomparison eXercise (CMIX) recently compared ten cloud detection algorithms. They suggested that no single algorithm performed better than the others (\cite{skakun2022cloud}). Similar conclusions are found in \cite{tarrio2020comparison} by analyzing 28 images over six Sentinel-2 tiles in Africa and Europe.
 
-In this chapter, we propose to use a novel approach for exploiting the hand-crafted cloud and cloud shadow masking information freely available in cloudSEN12. Unlike previous studies, we intend not only to characterize but also to predict cloud masking uncertainty worldwide. Inspired by deep kernel learning \cite{wilson2016deep}, we explore the use of Gradient boosting Gaussian Processes (GBGP) which combines the structural properties of machine learning architectures with the non-parametric flexibility of kernel methods.
+In this chapter, we propose to use a novel approach for 
+generating understanding
+que nos permita predecir el error de sen2cor
+
+cloud masking 
+
+
+exploiting the hand-crafted cloud and cloud shadow masking information freely available in cloudSEN12. Unlike previous studies, we intend not only to characterize but also to predict cloud masking uncertainty worldwide. Inspired by deep kernel learning \cite{wilson2016deep}, we explore the use of Gradient boosting Gaussian Processes (GBGP) which combines the structural properties of machine learning architectures with the non-parametric flexibility of kernel methods.
 
 ## Data
 
@@ -47,6 +54,25 @@ resolution. The TPR data used corresponds to the 2007–2016 period, the cloud t
 
 ### MODIS
 
+\begin{table}[!h]
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\multicolumn{1}{|c|}{\textbf{Dataset}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Used\\ for\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Spatial \\ coverage\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}Data \\ Type\end{tabular}}} & \multicolumn{1}{c|}{\textbf{Description}} \\ \hline
+Sen2Cor SLC - snow & T & Focal & B & \begin{tabular}[c]{@{}l@{}}Percentage of snow cover in a \\ cloudSEN12 IP.  If at least 5\% of snow\\ cover exists, 1; otherwise, 0.\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}CloudSEN12 - cloud \\ type\end{tabular} & T & Focal & N & \begin{tabular}[c]{@{}l@{}}Metadata available in cloudSEN12,\\ derived from human-photo interpretation.\\ There are five classes: cumulus, stratus,\\ cirrus, haze, and contrails. A single IP \\ might have multiple classes.\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}CloudSEN12 - cloud  \\ extent\end{tabular} & T & Focal & N & \begin{tabular}[c]{@{}l@{}}Metadata available in cloudSEN12, \\ derived from human-photo interpretation.\\ There are two classes: isolated, and\\ extended.\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}CloudSAT 3S-RMCP -\\ cloud ocurrence\end{tabular} & P & Global & C & \begin{tabular}[c]{@{}l@{}}CloudSAT level 3 product used to \\ generalize CloudSEN12 - cloud \\ type in prediction time.\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}CloudSEN12 -\\ Mean solar zenith \\ angle\end{tabular} & TP & Focal & C & \begin{tabular}[c]{@{}l@{}}The angle formed by the sun's beams \\ with respect to the vertical axis. In  \\ training phase values are obtained from \\ cloudSEN12 metadata. In prediction \\ phase is obtained by averaging image\\ properties from 2018 to 2020.\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}MODIS - \\ MCD43A4.006\\ (HOT and NDVI)\end{tabular} & TP & Global & C & \begin{tabular}[c]{@{}l@{}}Spectral bands obtained from MODIS\\ composite from 2018 to 2020. In training\\ phase, the values are resampled considering\\ each specific cloudSEN12 IP geotransform. \\ Then, the pixels are spatially reduced \\ by the mean.\end{tabular} \\ \hline
+\begin{tabular}[c]{@{}l@{}}MERIT Hydro - \\ Elevation\end{tabular} & TP & Global & C & Elevation map available in cloudSEN12. \\ \hline
+\begin{tabular}[c]{@{}l@{}}Inter-annual\\ Cloud frecuency\end{tabular} & TP & Global & C & \multirow{2}{*}{Obtained from global 1-km cloud dataset.} \\ \cline{1-4}
+\begin{tabular}[c]{@{}l@{}}Cloud intra-anual\\ variability\end{tabular} & TP & Global & C &  \\ \hline
+Latitude & TP & Global & C & \multirow{2}{*}{\begin{tabular}[c]{@{}l@{}}In training phase are obtained from the\\ cloudSEN12 IP centroid.\end{tabular}} \\ \cline{1-4}
+Longitude & TP & Global & C &  \\ \hline
+\end{tabular}%
+}
+\end{table}
 
 ## Methodology
 <!---
@@ -110,8 +136,7 @@ f(\mathbf{x}) \sim \mathcal{GP}(
 )
 \end{equation}
 
-All parameters of the model, including neural network weights $\mathbf{w}$ and kernel parameters $\mathbf{\gamma}$, are optimized end-to-end via backpropagation to minimize the
-negative log marginal likelihood (equation \ref{eq:3}).
+All parameters of the model, including neural network weights $\mathbf{w}$ and kernel parameters $\mathbf{\gamma}$, are optimized end-to-end via backpropagation to minimize the negative log marginal likelihood (equation \ref{eq:3}).
 
 \begin{figure}[!h]
 	\centering
@@ -126,10 +151,14 @@ For our deep kernel learning model, we used deep neural networks which produce
 C-dimensional top-level features. Here C is the number of classes. We place a Gaussian process on each dimension of these features. We used RBF base kernels. The additive GP layer is then followed by a linear mixing layer A  R C×C . We initialized A to be an identity matrix, and optimized in the joint learning procedure to recover cross-dimension correlations from data.
 We first train a deep neural network using SGD with the softmax loss objective, and rectified linear activation functions. After the neural network has been pre-trained, we fit an additive KISS-GP layer, followed by a linear mixing layer, using the top-level features of the deep network as inputs. Using this pre-training initialization, our joint SV-DKL model of section 3 is then trained through the stochastic variational method of section 4 which jointly optimizes all the hyperparameters  of the deep kernel (including all network weights), as well as the variational parameters, by backpropagating derivatives through the proposed marginal likelihood lower bound of the additive Gaussian process in section 4. In all experiments, we use a relatively large mini-batch size (specified according to the full data size), enabled by the proposed structure exploiting variational inference procedures. We achieve good performance setting the number of samples T = 1 in Eq. 4 for expectation estimation in variational inference, which provides additional confirmation for a similar observation in [14].
 
-### Model metrics 
-\label{section:metrics}
+### Model prediction
 
-### Model predictions
+### Random cross-validation
+
+### Geographical cross-validation
+
+### Evaluation metrics
+\label{section:metrics}
 
 
 ## Experimental results
