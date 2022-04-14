@@ -1,0 +1,95 @@
+%===============================================================================
+% Template Name:      CDE Thesis Presentation template
+% Template URI:       http://github.com/csaybar/cde-thesis/
+% Description:        Starter Presentation template for CDE master thesis 
+% Version:            1.1.1
+% Author:             Johan Janse van Rensburg
+% Modified by:        Cesar Aybar
+% License:            MIT License
+% License URI:        http://opensource.org/licenses/MIT
+%===============================================================================
+
+
+%=================================================
+% theme and color
+%=================================================
+\documentclass[compress]{beamer}
+\usepackage{amsfonts,amsmath,oldgerm}
+\usetheme{sintef}
+\usepackage{graphicx}
+\usepackage{animate}
+ 	
+\usetheme{Warsaw} % Themes http://www.hartwork.org/beamer-theme-matrix/
+\usefonttheme[onlymath]{serif}
+
+
+
+%=================================================
+% packages and new commands
+%=================================================
+\usepackage[ruled, linesnumbered, vlined]{algorithm2e}
+\usepackage{epsfig, subfigure, amssymb, multirow, algorithmic, amsmath}
+\newcommand*{\superscript}[1]{\ensuremath{^{\rm #1}}}
+\newcommand*{\subscript}[1]{\ensuremath{_{\rm #1}}}
+
+%=================================================
+% thesis details (first slide)
+%=================================================
+\title[{\sc How reliable are SEN2 cloud detection algorithms?} \hspace{0.8cm} \insertframenumber/\inserttotalframenumber]{{\sc How reliable are SEN2 cloud detection algorithms?}}
+\subtitle{Global uncertainty estimation using Deep Kernel Learning.}
+\author{\href{mailto:csaybar@gmail.com}{Cesar Luis Aybar Camacho}}
+\institute{\textbf{Erasmus Mundus Joint Master Degree Programme \\ Copernicus Master in Digital Earth} \\ Specialization track GeoData Science}
+\date{Vannes, France, 2022}
+
+
+%=================================================
+% start presentation
+%=================================================
+\begin{document}
+	
+%========================
+% title page
+%========================
+\begingroup
+\setbeamertemplate{headline}{}
+\addtobeamertemplate{frametitle}{\vskip-1.7ex}{}
+\begin{frame}
+	\begin{center}
+		\vspace{0.1cm}
+		\includegraphics[scale=0.15]{images/logo.pdf}
+	\end{center}
+	\titlepage
+\end{frame}
+\endgroup
+
+%========================
+% your slides:
+%========================
+\section{Acknowledges}
+\input{slides/acknowledges}
+
+
+\section{Introduction}
+\input{slides/introduction}
+
+\section{Data}
+\input{slides/data}
+
+\section{Methods}
+\input{slides/methods}
+
+\section{Results}
+\input{slides/results}
+
+\section{Conclusions}
+\input{slides/conclusions}
+
+%========================
+% bibliography
+%========================
+\input{slides/bib}
+
+%=================================================
+% end presentation
+%=================================================
+\end{document}
