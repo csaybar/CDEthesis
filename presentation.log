@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Debian) (preloaded format=pdflatex 2021.1.23)  11 APR 2022 20:19
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (TeX Live 2020/Debian) (preloaded format=pdflatex 2021.1.23)  25 APR 2022 01:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1205,11 +1205,11 @@ Overfull \hbox (36.367pt too wide) has occurred while \output is active
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./images/logo.pdf>]
 (./slides/acknowledges.tex
-<images/acknowledge.pdf, id=71, 1171.49669pt x 760.76218pt>
+<images/acknowledge.pdf, id=71, 1157.28355pt x 760.76218pt>
 File: images/acknowledge.pdf Graphic file (type pdf)
 <use images/acknowledge.pdf>
 Package pdftex.def Info: images/acknowledge.pdf  used on input line 7.
-(pdftex.def)             Requested size: 292.87346pt x 190.19008pt.
+(pdftex.def)             Requested size: 289.32018pt x 190.19008pt.
 
 Overfull \hbox (3.77373pt too wide) has occurred while \output is active
   [] [] [] [] [] [] [] [] [] 
@@ -1223,7 +1223,7 @@ Overfull \hbox (37.4958pt too wide) has occurred while \output is active
 [2
 
  <./images/acknowledge.pdf>]) (./slides/introduction.tex
-<images/intro_fig00_0.png, id=107, 954.56625pt x 365.365pt>
+<images/intro_fig00_0.png, id=111, 954.56625pt x 365.365pt>
 File: images/intro_fig00_0.png Graphic file (type png)
 <use images/intro_fig00_0.png>
 Package pdftex.def Info: images/intro_fig00_0.png  used on input line 11.
@@ -1243,7 +1243,7 @@ Overfull \hbox (37.5462pt too wide) has occurred while \output is active
 [3
 
  <./images/intro_fig00_0.png>]
-<images/intro_what_is_a_cloud.pdf, id=124, 744.86276pt x 516.00781pt>
+<images/intro_what_is_a_cloud.pdf, id=128, 744.86276pt x 516.00781pt>
 File: images/intro_what_is_a_cloud.pdf Graphic file (type pdf)
 <use images/intro_what_is_a_cloud.pdf>
 Package pdftex.def Info: images/intro_what_is_a_cloud.pdf  used on input line 2
@@ -1267,7 +1267,7 @@ Overfull \hbox (38.1406pt too wide) has occurred while \output is active
 [4
 
  <./images/intro_what_is_a_cloud.pdf>]
-<images/intro_fig01.png, id=210, 1085.55562pt x 605.26125pt>
+<images/intro_fig01.png, id=214, 1085.55562pt x 605.26125pt>
 File: images/intro_fig01.png Graphic file (type png)
 <use images/intro_fig01.png>
 Package pdftex.def Info: images/intro_fig01.png  used on input line 34.
@@ -1292,7 +1292,7 @@ Overfull \hbox (37.4646pt too wide) has occurred while \output is active
 [5
 
  <./images/intro_fig01.png (PNG copy)>]
-<images/intro_fig02.png, id=225, 2587.6675pt x 2592.68625pt>
+<images/intro_fig02.png, id=229, 2587.6675pt x 2592.68625pt>
 File: images/intro_fig02.png Graphic file (type png)
 <use images/intro_fig02.png>
 Package pdftex.def Info: images/intro_fig02.png  used on input line 55.
@@ -1411,33 +1411,33 @@ Overfull \hbox (37.7854pt too wide) has occurred while \output is active
 [10
 
 ]
-<images/gif01/frame-0.png, id=302, 1084.05pt x 1084.05pt>
+<images/gif01/frame-0.png, id=306, 1084.05pt x 1084.05pt>
 File: images/gif01/frame-0.png Graphic file (type png)
 <use images/gif01/frame-0.png>
 Package pdftex.def Info: images/gif01/frame-0.png  used on input line 65.
 (pdftex.def)             Requested size: 1084.04736pt x 1084.04736pt.
  <./images/gif01/frame-0.png> <a0,fr0>
-<images/gif01/frame-1.png, id=311, 1084.05pt x 1084.05pt>
+<images/gif01/frame-1.png, id=315, 1084.05pt x 1084.05pt>
 File: images/gif01/frame-1.png Graphic file (type png)
 <use images/gif01/frame-1.png>
 Package pdftex.def Info: images/gif01/frame-1.png  used on input line 65.
 (pdftex.def)             Requested size: 1084.04736pt x 1084.04736pt.
  <./images/gif01/frame-1.png>
 <a0,fr1>
-<images/gif01/frame-2.png, id=320, 1084.05pt x 1084.05pt>
+<images/gif01/frame-2.png, id=324, 1084.05pt x 1084.05pt>
 File: images/gif01/frame-2.png Graphic file (type png)
 <use images/gif01/frame-2.png>
 Package pdftex.def Info: images/gif01/frame-2.png  used on input line 65.
 (pdftex.def)             Requested size: 1084.04736pt x 1084.04736pt.
  <./images/gif01/frame-2.png> <a0,fr2>
-<images/gif01/frame-3.png, id=329, 1084.05pt x 1084.05pt>
+<images/gif01/frame-3.png, id=333, 1084.05pt x 1084.05pt>
 File: images/gif01/frame-3.png Graphic file (type png)
 <use images/gif01/frame-3.png>
 Package pdftex.def Info: images/gif01/frame-3.png  used on input line 65.
 (pdftex.def)             Requested size: 1084.04736pt x 1084.04736pt.
  <./images/gif01/frame-3.png>
 <a0,fr3> <a0,fr4> <a0,fr5>
-<images/gif01/frame-6.png, id=348, 1084.05pt x 1084.05pt>
+<images/gif01/frame-6.png, id=352, 1084.05pt x 1084.05pt>
 File: images/gif01/frame-6.png Graphic file (type png)
 <use images/gif01/frame-6.png>
 Package pdftex.def Info: images/gif01/frame-6.png  used on input line 65.
@@ -1477,7 +1477,7 @@ Overfull \hbox (37.7854pt too wide) has occurred while \output is active
 [12
 
 ]
-<images/intro_fig04.png, id=391, 1534.73375pt x 753.81625pt>
+<images/intro_fig04.png, id=395, 1534.73375pt x 753.81625pt>
 File: images/intro_fig04.png Graphic file (type png)
 <use images/intro_fig04.png>
 Package pdftex.def Info: images/intro_fig04.png  used on input line 86.
@@ -1688,7 +1688,7 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  24568 strings out of 480906
  478263 string characters out of 5910772
- 749826 words of memory out of 5000000
+ 749825 words of memory out of 5000000
  39439 multiletter control sequences out of 15000+600000
  589114 words of font info for 69 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1703,9 +1703,9 @@ ive/texmf-dist/fonts/type1/typoland/carlito/Carlito-Italic.pfb></usr/share/texl
 ive/texmf-dist/fonts/type1/typoland/carlito/Carlito.pfb></usr/share/texlive/tex
 mf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist
 /fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on presentation.pdf (26 pages, 3776425 bytes).
+Output written on presentation.pdf (26 pages, 4031702 bytes).
 PDF statistics:
- 649 PDF objects out of 1000 (max. 8388607)
+ 653 PDF objects out of 1000 (max. 8388607)
  474 compressed objects within 5 object streams
  64 named destinations out of 1000 (max. 500000)
  313 words of extra memory for PDF output out of 10000 (max. 10000000)
