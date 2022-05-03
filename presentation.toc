@@ -1,6 +1,6 @@
-\beamer@sectionintoc {1}{Acknowledges}{2}{0}{1}
-\beamer@sectionintoc {2}{Introduction}{3}{0}{2}
-\beamer@sectionintoc {3}{Data}{11}{0}{3}
-\beamer@sectionintoc {4}{Methods}{14}{0}{4}
-\beamer@sectionintoc {5}{Results}{17}{0}{5}
-\beamer@sectionintoc {6}{Conclusions}{20}{0}{6}
+\beamer@sectionintoc {1}{Problem definition}{3}{0}{1}
+\beamer@sectionintoc {2}{Intro}{9}{0}{2}
+\beamer@sectionintoc {3}{Data}{14}{0}{3}
+\beamer@sectionintoc {4}{Methods}{24}{0}{4}
+\beamer@sectionintoc {5}{Results}{33}{0}{5}
+\beamer@sectionintoc {6}{Conclusions}{33}{0}{6}
