@@ -90,14 +90,13 @@ The main bottleneck for kernel learning is solve the linear system $\widehat{K}_
 
 \subsection{KISS‑GP}
 
-Structured kernel interpolation (SKI) or KISS-GP is a scalable Gaussian process variant that combine the use of inducing point (citar) and structure exploiting approaches (citar), and sparse interpolation. A inducing point method states that given a set of $m << n$ data points $Z$, we can approximate the exact GP inference using a low-rank kernel (citar).
+Structured kernel interpolation (SKI) or KISS-GP is a scalable Gaussian process variant that combine the use of inducing point (citar), structure exploiting approaches (citar), and sparse interpolation. A inducing point method states that given a set of $m << n$ data points $Z$, we can approximate the exact GP inference using a low-rank kernel (citar).
 
 \begin{equation}
 K_{XX} \approx K_{XZ}K_{ZZ}^{-1}K_{ZX}
 \end{equation}
 
-In KISS GP the inducing points $Z$ are placed on a grid, and then exploit either Kronecker or Toeplitz algebra to efficiently solve linear systems 
-$K_{ZZ}^{-1}$
+In KISS GP the inducing points $Z$ are placed on a grid, and then exploit either by Kronecker or Toeplitz algebra to efficiently solve the linear systems $K_{ZZ}^{-1}$.
 
 
 sparse interpolation in a 
