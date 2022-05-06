@@ -13,10 +13,10 @@ documentclass: book
 bibliography: [bibliography/references.bib, bibliography/additional-references.bib]
 ---
 
-```{block type='savequote', quote_author='(ref:anime01)', include=knitr::is_latex_output()}
-Humans... We are NOT all the same! Some of us are born smarter, more beautiful, or to parents of higher status. Others, by contrast, are born weak in body or mind, or with little or no talent. We are all different! The mere existence of the human race is discriminatory!
+```{block type='savequote', quote_author='(ref:lesly01)', include=knitr::is_latex_output()}
+What am I in the eyes of most people - a nonentity, an eccentric or an unpleasant person - somebody who has no position in society and never will have, in short, the lowest of the low. All right, then - even if that were absolutely true, then I should one day like to show by my work what such an eccentric, such a nobody, has in his heart.
 ```
-(ref:anime01) --- Charles zi Britannia
+(ref:lesly01) --- Vincent Van Gogh - 1882
 
 
 # CloudSEN12 - a global benchmark dataset for cloud semantic understanding

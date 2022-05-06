@@ -10,9 +10,9 @@ documentclass: book
 ---
   
 ```{block type='savequote', quote_author='(ref:lesly02)', include=knitr::is_latex_output()}
-What am I in the eyes of most people - a nonentity, an eccentric or an unpleasant person - somebody who has no position in society and never will have, in short, the lowest of the low. All right, then - even if that were absolutely true, then I should one day like to show by my work what such an eccentric, such a nobody, has in his heart.
+It is a miracle that curiosity survives formal education.
 ```
-(ref:lesly02) --- Vincent Van Gogh - 1882
+(ref:lesly02) --- Albert Einstein
 
 # Uncertainty estimation
 \minitoc <!-- this will include a mini table of contents-->
@@ -20,13 +20,122 @@ What am I in the eyes of most people - a nonentity, an eccentric or an unpleasan
 ## Introduction
   
 <!-- Introduction -->
-Clouds contaminate nearly 0.65\% of the earth's surface regardless of time, with hotspots in tropics and subtropics regions (\cite{sassen2008classifying, winker2010calipso, Wilson2016}). Their effects on electromagnetic radiation signals vary according to different types of clouds. Grossly speaking, clouds may be classified depending on top height (CTH) and optical thickness (COT) properties (Figure \ref{fig:figure013}). Clouds with CTH are relatively easy to detect in Sentinel-2 imagery because of their high reflectance (white color) in all-optical frequency bands. Clouds with low COT and high CTH, e.g. cirrus clouds, can be detected using the cirrus band (1.36–1.39 $\mu$m), which has a strong water vapor absorption feature. Finally, clouds with low COT and low CTH, e.g. haze and fog, can be detected using spectral indices, such as HOT, which exploit the high correlation between blue and red bands for most clear-sky land surfaces (HOT, zhang2002). In general, clouds with low COT do not reflect all the sunlight allowing to observe a distorted view of the surface \cite{lynch2002cirrus, chen2017}. For some applications, such as object detection or disaster response\cite{Mateo-Garcia2021}, images contaminated with haze are still helpful. 
-
+Clouds contaminate nearly 0.65\% of the earth's surface regardless of time, with hotspots in tropics and subtropics regions (\cite{sassen2008classifying, winker2010calipso, Wilson2016}). Their effects on electromagnetic radiation signals vary according to different types of clouds. Grossly speaking, clouds may be classified depending on top height (CTH) and optical thickness (COT) properties (Figure \ref{fig:figure013}). Clouds with CTH are relatively easy to detect in Sentinel-2 imagery because of their high reflectance (white color) in all-optical frequency bands. Clouds with low COT and high CTH, e.g. cirrus clouds, can be detected using the cirrus band (1.36–1.39 $\mu$m), which has a strong water vapor absorption feature. Finally, clouds with low COT and low CTH, e.g. haze and fog, can be detected using spectral indices, such as HOT, which exploit the high correlation between blue and red bands for most clear-sky land surfaces (HOT, \cite{zhang2002}). In general, clouds with low COT do not reflect all the sunlight allowing to observe a distorted view of the surface (\cite{lynch2002cirrus, chen2017}). For some applications, such as object detection or disaster response (\cite{Mateo-Garcia2021}), images contaminated with haze and fog are still helpful. Therefore, users must have control over which contaminated pixels to mask out.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=0.98\linewidth]{figures/chapter01/figure06.png}
-	\caption{Confusion matrices (values in percent) between the high-quality manual labels cast by the CDE group after and before the quality control process. See the sections human calibration and quality control. The original labels are divided based on the difficulty IP property (See Table \ref{tab:table04}).}
+	\includegraphics[width=0.98\linewidth]{figures/chapter02/figure01.png}
+	\caption{Different cloud types depict in Sentinel-2 imagery.}
 	\label{fig:figure013}
 \end{figure}
 
+A plethora of cloud masking methods have been presented (\cite{Hagolle2017, Domnich2021, Louis2016, Qiu2019, richter2019atmospheric, jan_wevers_2021_5788067, Lopez-Puigdollers2021, frantz2019force}). These methods can be classified into two main categories: knowledge-driven (KD) and data-driven (DD). While KD emphasizes the use of physical rules formulated on spectral and contextual features of different cloud types, DD is subjected to the exigency of large pixel-level annotation and costly computational requirements. Cloud masking can be interpreted as a statistical classification problem, with the confusion matrix being used to differentiate between two types of errors. On the one hand, cloud omission errors (cloud as non-cloud) can lead to inconsistencies in time series of surface reflectance pixels, whereas cloud commission (clear as non-cloud) reduces the number of valid observations and, as a result, the frequency of cloud-free data (\cite{skakun2022cloud}). Cloud masking techniques are aimed to have a balance between commission and omission errors. 
+
+<!-- Previous studies -->
+Over the last years, only a few studies have attempted to benchmark the various Sentinel-2 cloud masking methods. For instance, \cite{Cilli} compare DD with KD methods by analyzing 135 Sentinel-2 images distributed worldwide. They concluded that DD methods outperform KD methods. According to their experiments, $10^{4}$ manually labeled pixels are sufficient for train machine learning algorithms to operate accurately cloud masking. Nonetheless, it is well established that DD models are highly dependent on the training dataset (\cite{Lopez-Puigdollers2021}). As a result, the comparison could be unfair, especially if the KD methods have not been as well calibrated to the dataset. \cite{Zekoll2021} compare three KD threshold-based: FMask, ATCOR, and Sen2Cor using a sample-based dataset. The results show that Sen2Cor outperforms the other methods. However, human-made datasets, especially those created by sampling, can be positively skewed if we consider that humans tend to overlook unpleasant information such as cloud borders (ostrich-effect, \cite{Valdez2017}). Using four different datasets, the Cloud Mask Intercomparison eXercise (CMIX) recently compared ten cloud detection algorithms. They suggested that no single algorithm performed better than the others \cite{skakun2022cloud}. Similar conclusions are found in \cite{tarrio2020comparison} by analyzing 28 images over six Sentinel-2 tiles in Africa and Europe.
+
+<!-- End -->
+This chapter presents a new DD technique based on state-of-the-art probabilistic deep neural networks that generate estimation together with well-calibrated uncertainty. A cloud clover product with uncertainty values will give final users more leeway in balancing commission and omission errors. In short, uncertainty can be a result of two distinct sources: aleatoric or epistemic (\cite{hora1996aleatory}, \cite{der2009aleatory}). While aleatoric measures the data's stochasticity, epistemic measures the models' structure and parameters' uncertainty. We propose estimate the epistemic uncertainty with a variational deep kernel learning (VDKL). The following sections provide a quick overview of the data used in this research (section 2), details about the implementation of VDKL (section 3), discuss the results (section 4), and finally reach some conclusions.
+
+
+## Data
+
+\subsection{Sentinel-2}
+
+Sentinel-2 (SEN2) is a Copernicus EO mission that consists of two satellites: SEN2A (launched on June 23, 2015) and SEN2B (launched on: March 7, 2017). At the equator, each Sentinel-2 satellite has a ten-day repeat cycle. However, both satellites present the same orbit with a $180^\circ$ phase delay, shortening to five-day revisiting time. The cloudSEN12 dataset acquired SEN2 A/B Multi-Spectral Instrument (MSI) top-of-atmosphere (TOA) reflectance images (Level-1C) from 2018 to 2020. The thirteen spectral bands available in SEN2 A/B (table 1) constitute the input data from the SDKL model. We only use the high-quality subset of the cloudSEN12 dataset (see chapter one) because of the risk of bias due to scene incompleteness in scribble and no-label annotation. For computational efficiency in training, the image patches are resized to 128 x 128 pixels, while keeping the original aspect ratio.
+
+\subsection{Reference data} \label{section:ref_data}
+
+The proposed probabilistic neural network requires a diverse ground-truth dataset to learn robust representations that capture the interaction of the atmospheric conditions during image acquisition with landscape variability. Fortunately, high-quality cloudSEN12 has a large number of image patches with cloud and cloud shadow semantics. Apart from the hand-crafted data at the pixel level, the following automated cloud masking algorithms are utilized to compare VDKL outcomes: Fmask4, Sen2Cor, s2cloudless, DL L8S2 UV, KappaMask, and QA60. The cloud cover percentages were calculated for manual and automatic pixel-level products by dividing the number of cloud pixels by the total number of pixels.
+
+## Methodology
+
+This study aims to create a regression model that predicts cloud cover $y$ given a SEN2 imagery $x^*$. The regression model $\mathbf{f}$ is trained using a dataset,  $\mathcal{D} = \{x_i, y_i\}^{N}_{i=1}$ with $x_i$ and $y_i \in \mathbb{R}$. The segment $x_i$ represents an SEN2 IP given an array of 
+509x509x13, $y_i$ is the cloud cover value (see section \ref{section:ref_data}), and $N$ is the number of observations set as 10000. We propose the use of a variational deep kernel learning (DKL) regression. It combines deep neural networks (DNN) with standard gaussian process regression (GP). While ANN captures the non-stationary and hierarchical structure, GP permits the estimation of their uncertainty considering the local autocorrelation of the observations. \cite{rasmussen2003gaussian} provide a detail description of GP. The standard GP, DKL, the model setup and validation are briefly reviewed in the following sections.
+
+\subsection{Gaussian process regresion}
+
+Standard Gaussian Process Regression (GP) models is a expressive probabilistic model in which both training and testing data points are regarded samples of a joint multivariate normal distribution (\cite{williams2006gaussian}). As other regression models, a GP model is formed by noisy variables of the true underlying function $\mathbf{f}$ that projects the vector space $X$ into real-valued targets $y$, i.e. $y = f(\mathbf{x}) + \epsilon$. The element $\epsilon$ represents the noise variables with $\mathcal{N}(0, \sigma^{2})$. In a GP model we assume that all the finite dimensional distributions $f(\mathbf{x})$ are normally distributed with $\mu$ as a mean and $K_{XX}|\gamma$ as the prior covariance matrix. The covariance (kernel) matrix regulates the smoothness of GPs and its values are implicitly dependent on the kernel hyperparameters $\gamma$. In this specific case, the estimation of $f(\mathbf{x})$ can be expressed given by:
+  
+\begin{equation}
+\begin{aligned}
+\mathbf{f} = f(\mathbf{x}) = [f(x_1), ...., f(x_m)]^\top & \sim 
+\mathcal{GP}\left(
+  \mu, K_{XX}|\gamma\right
+) \\
+\end{aligned} \label{eq:1}
+\end{equation}
+
+Conditioning the joint normal distribution by the training points, the posterior distribution of the output values $f(\mathbf{x}_{*})$ at the test data point $X_*$ can be inferred as:
+  
+\begin{equation}
+\begin{aligned}
+f(\mathbf{x}_{*}) \mid X_{*}, X, \mathbf{y}, \boldsymbol{\gamma}, \sigma^{2} \sim \mathcal{N}(\mu^{*}, \Sigma^{*}), \\
+\mu^{*} = \mu_{X_*} + K_{X_*X}\widehat{K}_{XX}^{-1}\mathbf{y}, \\
+\Sigma^{*} = K_{X_*X_*} - K_{X_*X}\widehat{K}_{XX}^{-1}K_{XX_*}
+\end{aligned} \label{eq:2}
+\end{equation}
+
+A hat denotes an added diagonal, i.e. $\widehat{K}_{XX} = K_{XX} + + \sigma^{2}I$. $\mu^{*}$ and $\Sigma^{*}$ are the posterior mean and covariance matrix respectively. The matrices of the form $K_{X_iX_j}$ denote cross-covariances between the train ($X$) and test ($X_*$) vector spaces. The hyperparameters $\lambda$ of the kernel are usually learned directly by minimizing the negative log marginal likelihood $\mathcal{L}(\theta)$ with respect to training observations:
+  
+\begin{equation}
+\begin{aligned}
+\mathcal{L} = - \log p(\mathbf{y} \mid \gamma, X) \propto \mathbf{y}^{\top} \widehat{K}_{XX}^{-1} \mathbf{y} + \log \left|\widehat{K}_{X X}\right|, \\
+\frac{\partial \mathcal{L}}{\partial \theta} = \mathbf{y}^{\top} \widehat{K}_{XX} \frac{\partial \widehat{K}_{X X}^{-1}}{\partial \theta} \widehat{K}_{X X} \mathbf{y}-\operatorname{tr}\left\{\widehat{K}_{X X}^{-1} \frac{\partial \widehat{K}_{XX}}{\partial \theta}\right\}
+\label{eq:3}
+\end{aligned}
+\end{equation}
+
+The main bottleneck for kernel learning is solve the linear system $\widehat{K}_{XX}^{-1}y$ in equation \ref{eq:3}. The standard approach is to compute the Cholesky decomposition of the matrix $\widehat{K}_{XX}^{-1}$. The Cholesky decomposition's core algorithm uses a divide-and-conquer approach that is inefficient on GPU acceleration (\cite{krishnamoorthy2013matrix}). Furthermore, it requires $\mathcal{O}(n^{3})$ computation and $\mathcal{O}(n2)$ storage for GP inference and kernel learning (\cite{rasmussen2003gaussian}). To address the above challenges, several approaches to scaling up GP inference have been proposed (\cite{gardner2018gpytorch, cunningham2008fast, dong2017scalable, bach2013sharp, wilson2015thoughts}). In this paper, we address the GP inference issue by using the Blackbox Matrix-Matrix multiplication inference (BBMM, \cite{gardner2018gpytorch}). BBMM use preconditioned batched conjugate gradients to solve linear systems, reducing the asymptotic time complexity of GP inference from $\mathcal{O}(n^{3})$ to $\mathcal{O}(n^{2})$. Besides, it overcomes memory constraints by divvying the kernel matrix to perform matrix-vector multiplication (MVM, \cite{demmel1997applied}) without having to explicitly construct the kernel matrix, reducing the memory requirement to $\mathcal{O}(n)$. Finally, BBMM parallelize partitioned MVMs across multiple core, enabling a better use of GPU hardware in comparison to the Cholesky factorization.
+
+\subsection{KISS‑GP}
+
+Structured kernel interpolation (SKI) or KISS-GP is a scalable Gaussian process variant that combine the use of inducing point (citar) and structure exploiting approaches (citar), and sparse interpolation. A inducing point method states that given a set of $m << n$ data points $Z$, we can approximate the exact GP inference using a low-rank kernel (citar).
+
+\begin{equation}
+K_{XX} \approx K_{XZ}K_{ZZ}^{-1}K_{ZX}
+\end{equation}
+
+In KISS GP the inducing points $Z$ are placed on a grid, and then exploit either Kronecker or Toeplitz algebra to efficiently solve linear systems 
+$K_{ZZ}^{-1}$
+
+
+sparse interpolation in a 
+
+
+is to wisely select the inducing points Z through a regularized objective. KISS GP use a 
+
+structure-exploiting strategy, inducing points, and sparse interpolation
+
+
+\subsection{KISS‑GP}
+
+KISS-GP is a scalable Gaussian process approach that uses structured kernel interpolation (SKI). This method combines a structure-exploiting strategy, inducing points, and sparse interpolation to minimize inference time and storage costs in Gaussian processes from $mathcalO(m2n + m3)$ and $mathcalO(mn + m2)$, respectively. First, KISS GP interprets the existing inducing point methods such as FITC as creating an approximate kernel by performing a GP interpolation on the true kernel for scalable computations.
+
+This method uses local cubic and inverse distance weighting interpolation
+to create a sparse approximation to the cross covariance matrix between the inducing points and training points, and combines it with structure exploiting approaches such as Kronecker [67] and Toeplitz [66] methods to allow further gains in scalability. A more detail explanaition is available in wilson 2016.
+
+\subsection{Stocastic Variational Deep kernel learning}
+
+DKL is a probabilistic deep network that simultaneously learns a feature 
+extractor and a Gaussian process on the feature space (cite). The network's 
+structure is depicted in Figure \ref{fig:figure02}. The deep non-linear feature extractor $\mathbf{h(x,w)}$, parametrized by weights $\mathbf{w}$, is applied to the observed input variable $\mathbf{x}$. Next, the DNN outputs are modeled using $\mathcal{GP}$ by:
+
+\begin{equation}
+f(\mathbf{x}) \sim \mathcal{GP}(
+    \mu(\mathbf{h_w(x)}),
+    k_{\gamma}(\mathbf{h_w(x)}, \mathbf{h_w({x}')})
+)
+\end{equation}
+
+All parameters of the model, including neural network weights $\mathbf{w}$ and kernel parameters $\mathbf{\gamma}$, are optimized end-to-end via backpropagation to minimize the negative log marginal likelihood (equation \ref{eq:3}).
+
+\begin{equation}
+\begin{aligned}
+  k(x_i, u_j) \approx w_ik(u_a, u_j) + (1 − w_i)k(u_b, u_j)
+\end{equation}
+\end{aligned}
+
+\subsection{Stochastic Variational Deep Kernel Learning}
+
+Exact inference and learning in Gaussian processes with a non-Gaussian likelihood is not analytically tractable. Variational inference is an appealing approximate technique due to its automatic regularization to avoid overfitting, and its ability to be used with stochastic gradient training, by providing a factorized approximation to the Gaussian process marginal likelihood. We develop our stochastic variational method equipped with a fast sampling scheme for tackling any intractable marginalization
