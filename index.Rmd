@@ -33,7 +33,7 @@ submitted-text-first: Specialization track GeoData Science
 submitted-text-second: Vannes, France, 2022
 
 # dedication
-dedication: To Prof. Bram Leo Willems, who gifted me my first computer ten years ago. This document encapsulates everything I have learned since then.
+dedication: Prof. Bram Leo Willems, who without expecting anything in return gifted me my first computer ten years ago.
 
 # abstract
 abstract-heading: "Abstract"

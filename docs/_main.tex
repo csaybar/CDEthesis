@@ -59,6 +59,8 @@
 
 % enable strikethrough
 \usepackage[normalem]{ulem}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 % use soul package for correction highlighting
 \usepackage{color, soul}
@@ -277,7 +279,7 @@ GLOBAL UNCERTAINTY ESTIMATION WITH GAUSSIAN PROCESSES.}
 
 %%%%% DEDICATION
 \begin{dedication}
-  To Prof.~Bram Leo Willems, who gifted me my first computer ten years ago. This document encapsulates everything I have learned since then.
+  Prof.~Bram Leo Willems, who without expecting anything in return gifted me my first computer ten years ago.
 \end{dedication}
 
 %%%%% ABSTRACT
@@ -285,18 +287,27 @@ GLOBAL UNCERTAINTY ESTIMATION WITH GAUSSIAN PROCESSES.}
 
 \renewcommand{\abstracttitle}{Abstract}
 \begin{abstract}
-	Cloud detection (CD) is one of the most critical metadata filters for searching, selecting, and accessing
- imagery in Earth Observation (EO) platforms. In recent years, the extensive archive of EO datasets
- has boosted the use of data-driven algorithms to improve cloud and cloud-shadow detection. However,
- data-driven algorithms require large manually annotated datasets, which are expensive and time-consuming
- to collect. The first chapter of this diploma thesis introduce CloudSEN12, a new multi-temporal global dataset
- created exploiting different EO datasets offered by the Copernicus program. CloudSEN12 has 49,400 image patches,
- including (1) Sentinel-2 level-1C and level-2A multi-spectral data, (2) Sentinel-1 synthetic aperture radar
- data, (3) auxiliary remote sensing products, (4) different hand-crafted annotations to label the presence
- of clouds and cloud shadows, and (5) the results from eight state-of-the-art cloud detection algorithms. At present,
- CloudSEN12 exceeds all previous efforts in terms of annotation richness, scene variability, metadata complexity,
- control quality, data distribution and size. In the second chapter, cloudSEN12 is used to analize how
- reliable is Sen2COR Sentinel-2 2A cloud mask. The results shows that \ldots{}
+	Cloud detection (CD) is one of the most critical metadata filters for searching,
+ selecting, and accessing imagery in Earth Observation (EO) platforms. In recent
+ years, the extensive archive of EO datasets has boosted the use of data-driven
+ algorithms to improve cloud and cloud-shadow detection. However, data-driven
+ algorithms require large manually annotated datasets, which are expensive and
+ time-consuming to collect. The first chapter of this thesis introduce CloudSEN12, a
+ new multi-temporal global dataset created exploiting different EO datasets offered
+ by the Copernicus program. CloudSEN12 has 49,400 image patches, including
+ (1) Sentinel-2 level-1C and level-2A multi-spectral data, (2) Sentinel-1 synthetic
+ aperture radar data, (3) auxiliary remote sensing products, (4) different hand-
+ crafted annotations to label the presence of clouds and cloud shadows, and (5)
+ the results from eight state-of-the-art cloud detection algorithms. At present,
+ CloudSEN12 exceeds all previous efforts in terms of annotation richness, scene
+ variability, metadata complexity, control quality, data distribution and size. In
+ the second part, cloudSEN12 is used to establish the current state of the art in
+ cloud detection and cloud cover estimation for Sentinel-2 imagery. Furthermore,
+ we proposed directly estimating cloud cover using both a simple ResNet-18 and
+ a single forward pass uncertainty model. The results show that cloudSEN12
+ increases the efficiency of data-driven algorithms by at least 20\%. In addition,
+ for the first time we analyze how credible is the estimation of uncertainty in
+ cloud detection models.
 
  \mbox{}
  \vfill
@@ -768,15 +779,15 @@ It is a miracle that curiosity survives formal education.
 
 
 
-\hypertarget{uncertainty-estimation}{%
-\chapter{Uncertainty estimation}\label{uncertainty-estimation}}
+\hypertarget{cloud-cover-estimation}{%
+\chapter{Cloud cover estimation}\label{cloud-cover-estimation}}
 
 \minitoc 
 
 \hypertarget{introduction-1}{%
 \section{Introduction}\label{introduction-1}}
 
-Clouds contaminate nearly 0.65\% of the earth's surface regardless of time, with hotspots in tropics and subtropics regions (\cite{sassen2008classifying, winker2010calipso, Wilson2016}). Their effects on electromagnetic radiation signals vary according to different types of clouds. Grossly speaking, clouds may be classified depending on top height (CTH) and optical thickness (COT) properties (Figure \ref{fig:figure013}). Clouds with CTH are relatively easy to detect in Sentinel-2 imagery because of their high reflectance (white color) in all-optical frequency bands. Clouds with low COT and high CTH, e.g.~cirrus clouds, can be detected using the cirrus band (1.36--1.39 \(\mu\)m), which has a strong water vapor absorption feature. Finally, clouds with low COT and low CTH, e.g.~haze and fog, can be detected using spectral indices, such as HOT, which exploit the high correlation between blue and red bands for most clear-sky land surfaces (HOT, \cite{zhang2002}). In general, clouds with low COT do not reflect all the sunlight allowing to observe a distorted view of the surface (\cite{lynch2002cirrus, chen2017}). For some applications, such as object detection or disaster response (\cite{Mateo-Garcia2021}), images contaminated with haze and fog are still helpful. Therefore, users must have control over which contaminated pixels to mask out.
+Clouds contaminate nearly 0.65\% of the earth's surface regardless of time, with hotspots in tropics and subtropics regions (\cite{sassen2008classifying, winker2010calipso, Wilson2016}). Their effects on electromagnetic radiation signals vary according to different types of clouds. Clouds can be characterized in general based on their top pressure (CTP) and optical thickness (COT) properties (Figure \ref{fig:figure013}). High COT clouds are easily spotted by Sentinel-2 imagery due to their white color in all-optical frequency bands. Low COT and high CTP clouds, for example, cirrus clouds, can be featured using the cirrus band (1.36--1.39 \(\mu m\)), which is sensible to water vapor absorption. Lastly, clouds with low COT and low CTP, like haze and fog, can be found using spectral indices like HOT, which take advantage of the high correlation between blue and red bands on land surfaces under clear skies (HOT, \cite{zhang2002}). In general, when the COT property has low values, sunlight is partially reflected, allowing a distorted view of the surface to be observed (\cite{lynch2002cirrus, chen2017}). For some applications, such as object detection or disaster response (\cite{Mateo-Garcia2021}), images contaminated with haze and fog are still helpful. Therefore, users must have control over which contaminated pixels to mask out.
 
 \begin{figure}[!h]
     \centering
@@ -785,32 +796,39 @@ Clouds contaminate nearly 0.65\% of the earth's surface regardless of time, with
     \label{fig:figure013}
 \end{figure}
 
-A plethora of cloud masking methods have been presented (\cite{Hagolle2017, Domnich2021, Louis2016, Qiu2019, richter2019atmospheric, jan_wevers_2021_5788067, Lopez-Puigdollers2021, frantz2019force}). These methods can be classified into two main categories: knowledge-driven (KD) and data-driven (DD). While KD emphasizes the use of physical rules formulated on spectral and contextual features of different cloud types, DD is subjected to the exigency of large pixel-level annotation and costly computational requirements. Cloud masking can be interpreted as a statistical classification problem, with the confusion matrix being used to differentiate between two types of errors. On the one hand, cloud omission errors (cloud as non-cloud) can lead to inconsistencies in time series of surface reflectance pixels, whereas cloud commission (clear as non-cloud) reduces the number of valid observations and, as a result, the frequency of cloud-free data (\cite{skakun2022cloud}). Cloud masking techniques are aimed to have a balance between commission and omission errors.
+In recent years, a plethora of cloud masking methods have been presented (\cite{Hagolle2017, Domnich2021, Louis2016, Qiu2019, richter2019atmospheric, jan_wevers_2021_5788067, Lopez-Puigdollers2021, frantz2019force}). On the basis of cloud masking results, cloud cover metadata (Figure \ref{fig:figure014}) is generated for searching, selecting, and accessing imagery datasets (\cite{tiede2021investigating}). Cloud cover prediction can be interpreted as a statistical regression problem. Positive residuals are the result from cloud comission errors (non-cloud as cloud), whereas negative residuals derive from cloud omission errors (cloud as non-cloud).
 
-Over the last years, only a few studies have attempted to benchmark the various Sentinel-2 cloud masking methods. For instance, \cite{Cilli} compare DD with KD methods by analyzing 135 Sentinel-2 images distributed worldwide. They concluded that DD methods outperform KD methods. According to their experiments, \(10^{4}\) manually labeled pixels are sufficient for train machine learning algorithms to operate accurately cloud masking. Nonetheless, it is well established that DD models are highly dependent on the training dataset (\cite{Lopez-Puigdollers2021}). As a result, the comparison could be unfair, especially if the KD methods have not been as well calibrated to the dataset. \cite{Zekoll2021} compare three KD threshold-based: FMask, ATCOR, and Sen2Cor using a sample-based dataset. The results show that Sen2Cor outperforms the other methods. However, human-made datasets, especially those created by sampling, can be positively skewed if we consider that humans tend to overlook unpleasant information such as cloud borders (ostrich-effect, \cite{Valdez2017}). Using four different datasets, the Cloud Mask Intercomparison eXercise (CMIX) recently compared ten cloud detection algorithms. They suggested that no single algorithm performed better than the others \cite{skakun2022cloud}. Similar conclusions are found in \cite{tarrio2020comparison} by analyzing 28 images over six Sentinel-2 tiles in Africa and Europe.
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.98\linewidth]{figures/chapter02/figure02.png}
+    \caption{A simplified diagram that illustrates the  regression problem.}
+    \label{fig:figure014}
+\end{figure}
 
-This chapter presents a new DD technique based on state-of-the-art probabilistic deep neural networks that generate estimation together with well-calibrated uncertainty. A cloud clover product with uncertainty values will give final users more leeway in balancing commission and omission errors. In short, uncertainty can be a result of two distinct sources: aleatoric or epistemic (\cite{hora1996aleatory}, \cite{der2009aleatory}). While aleatoric measures the data's stochasticity, epistemic measures the models' structure and parameters' uncertainty. We propose estimate the epistemic uncertainty with a variational deep kernel learning (VDKL). The following sections provide a quick overview of the data used in this research (section 2), details about the implementation of VDKL (section 3), discuss the results (section 4), and finally reach some conclusions.
+Over the last years, only a few studies have attempted to benchmark the various Sentinel-2 cloud masking methods. For instance, \cite{Cilli} compare DD with KD methods by analyzing 135 Sentinel-2 images distributed worldwide. They concluded that DD methods outperform KD methods. According to their experiments, \(10^{4}\) manually labeled pixels are sufficient for train machine learning algorithms to operate accurately cloud masking. Nonetheless, it is well established that DD models are highly dependent on the training dataset (\cite{Lopez-Puigdollers2021}). As a result, the comparison could be unfair, especially if the KD methods have not been as well calibrated to the dataset. \cite{Zekoll2021} compare three KD threshold-based: FMask, ATCOR, and Sen2Cor using a sample-based dataset. The results show that Sen2Cor outperforms the other methods. However, human-made datasets, especially those created by sampling, can be positively skewed if we consider that humans tend to overlook unpleasant information such as cloud borders (ostrich-effect, \cite{Valdez2017}). Using four different datasets, the Cloud Mask Intercomparison eXercise (CMIX) recently compared ten cloud masking algorithms. They suggested that no single algorithm performed better than the others (\cite{CMIXRSE22}). Similar conclusions are found in \cite{tarrio2020comparison} by analyzing 28 images over six Sentinel-2 tiles in Africa and Europe.
+
+This chapter presents a new DD technique based on state-of-the-art probabilistic deep neural networks that generate cloud cover estimation together with well-calibrated uncertainty. A cloud clover product with uncertainty values will give final users more leeway in balancing commission and omission errors. In short, uncertainty can be a result of two distinct sources: aleatoric or epistemic (\cite{hora1996aleatory}, \cite{der2009aleatory}). While aleatoric measures the data's stochasticity, epistemic measures the models' structure and parameters' uncertainty. We propose estimate the epistemic uncertainty with a variational deep kernel learning (VDKL). The following sections provide a quick overview of the data used in this research (section 2), details about the implementation of VDKL (section 3), discuss the results (section 4), and finally reach some conclusions.
 
 \hypertarget{data}{%
 \section{Data}\label{data}}
 
 \subsection{Sentinel-2}
 
-Sentinel-2 (SEN2) is a Copernicus EO mission that consists of two satellites: SEN2A (launched on June 23, 2015) and SEN2B (launched on: March 7, 2017). At the equator, each Sentinel-2 satellite has a ten-day repeat cycle. However, both satellites present the same orbit with a \(180^\circ\) phase delay, shortening to five-day revisiting time. The cloudSEN12 dataset acquired SEN2 A/B Multi-Spectral Instrument (MSI) top-of-atmosphere (TOA) reflectance images (Level-1C) from 2018 to 2020. The thirteen spectral bands available in SEN2 A/B (table 1) constitute the input data from the SDKL model. We only use the high-quality subset of the cloudSEN12 dataset (see chapter one) because of the risk of bias due to scene incompleteness in scribble and no-label annotation. For computational efficiency in training, the image patches are resized to 128 x 128 pixels, while keeping the original aspect ratio.
+Sentinel-2 (SEN2) is a Copernicus EO mission that consists of two satellites: SEN2A (launched on June 23, 2015) and SEN2B (launched on: March 7, 2017). At the equator, each Sentinel-2 satellite has a ten-day repeat cycle. However, both satellites present the same orbit with a \(180^\circ\) phase delay, shortening to five-day revisiting time. The cloudSEN12 dataset acquired 10 000 image patches of \(509 \times 509\) pixels of SEN2 A/B Multi-Spectral Instrument (MSI) top-of-atmosphere (TOA) reflectance images (Level-1C) from 2018 to 2020. The thirteen spectral bands available in SEN2 A/B (Table \ref{tab:table02}) constitute the input data from the SDKL model. For computational efficiency in training, the SEN2 image patches are resized to 128 x 128 pixels, while keeping the original aspect ratio.
 
-\subsection{Reference data} \label{section:ref_data}
+\subsection{Reference data} 
+\label{section:ref_data}
 
-The proposed probabilistic neural network requires a diverse ground-truth dataset to learn robust representations that capture the interaction of the atmospheric conditions during image acquisition with landscape variability. Fortunately, high-quality cloudSEN12 has a large number of image patches with cloud and cloud shadow semantics. Apart from the hand-crafted data at the pixel level, the following automated cloud masking algorithms are utilized to compare VDKL outcomes: Fmask4, Sen2Cor, s2cloudless, DL L8S2 UV, KappaMask, and QA60. The cloud cover percentages were calculated for manual and automatic pixel-level products by dividing the number of cloud pixels by the total number of pixels.
+The proposed probabilistic neural network requires a diverse ground-truth dataset to create robust representations that reflect cloud type and landscape heterogeneity. Fortunately, high-quality cloudSEN12 has a large number of image patches with cloud and cloud shadow semantics worlwide. Apart from the hand-crafted data at the pixel level, the automatic cloud masking techniques Fmask4, Sen2Cor, s2cloudless, DL L8S2 UV, KappaMask, and QA60 are used to compare VDKL results. In order to maintain fairness, we only consider cloudSEN12 high-quality IPs because of the risk of bias due to scene incompleteness in scribble and no-annotation. Besides, IPs with cloud coverage lower than 5 \% are not considered to avoid positive bias in the results. For both human and automatic pixel-level products, the cloud cover percentages were computed by dividing the number of cloud pixels by the total number of pixels (Figure \ref{fig:figure014}). See chapter one or \cite{CMIXRSE22} for a more detailed overview of the prior cloud masking algorithms.
 
 \hypertarget{methodology}{%
 \section{Methodology}\label{methodology}}
 
-This study aims to create a regression model that predicts cloud cover \(y\) given a SEN2 imagery \(x^*\). The regression model \(\mathbf{f}\) is trained using a dataset, \(\mathcal{D} = \{x_i, y_i\}^{N}_{i=1}\) with \(x_i\) and \(y_i \in \mathbb{R}\). The segment \(x_i\) represents an SEN2 IP given an array of
-509x509x13, \(y_i\) is the cloud cover value (see section \ref{section:ref_data}), and \(N\) is the number of observations set as 10000. We propose the use of a variational deep kernel learning (DKL) regression. It combines deep neural networks (DNN) with standard gaussian process regression (GP). While ANN captures the non-stationary and hierarchical structure, GP permits the estimation of their uncertainty considering the local autocorrelation of the observations. \cite{rasmussen2003gaussian} provide a detail description of GP. The standard GP, DKL, the model setup and validation are briefly reviewed in the following sections.
+This study aims to create a regression model that predicts cloud cover \(y\) given SEN2 imagery \(X\). The regression model \(\mathbf{f}\) is trained using a dataset, \(\mathcal{D} = \{x_i, y_i\}^{N}_{i=1}\) with \(x_i\) and \(y_i \in \mathbb{R}\). The segment \(x_i\) represents an array of \(509 \times 509 \times 13\), and \(y_i\) is the cloud cover value (see section \ref{section:ref_data}), and \(N\) is the number of observations set as 10000. We propose the use of a variational stocastic deep kernel learning (VSDKL) regression. It combines standard deep neural networks (DNN) with gaussian process regression (GP). While DNN captures the non-stationary and hierarchical structure, GP permits the estimation of their uncertainty considering the local autocorrelation of the observations in latent space. \cite{rasmussen2003gaussian} provide a detail description of GP. The standard GP, VSDKL, the model setup and validation are briefly reviewed in this following section.
 
 \subsection{Gaussian process regresion}
 
-Standard Gaussian Process Regression (GP) models is a expressive probabilistic model in which both training and testing data points are regarded samples of a joint multivariate normal distribution \cite{williams2006gaussian}. As other regression models, a GP model is formed by noisy variables of the true underlying function \(\mathbf{f}\) that projects the vector space \(X\) into real-valued targets \(y\), i.e.~\(y = f(\mathbf{x}) + \epsilon\). The element \(\epsilon\) represents the noise variables with \(\mathcal{N}(0, \sigma^{2})\). In a GP model we assume that all the finite dimensional distributions \(f(\mathbf{x})\) are normally distributed with \(\mu\) as a mean and \(K_{XX}|\gamma\) as the prior covariance matrix. The covariance (kernel) matrix regulates the smoothness of GPs and its values are implicitly dependent on the kernel hyperparameters \(\gamma\). In this specific case, the estimation of \(f(\mathbf{x})\) can be expressed given by:
+Standard Gaussian Process Regression (GP) models is a expressive probabilistic model in which both training and testing data points are regarded samples of a joint multivariate normal distribution (\cite{williams2006gaussian}). As other regression models, a GP model is formed by noisy variables of the true underlying function \(\mathbf{f}\) that projects the vector space \(X\) into real-valued targets \(y\), i.e.~\(y = f(\mathbf{x}) + \epsilon\). The element \(\epsilon\) represents the noise variables with \(\mathcal{N}(0, \sigma^{2})\). In a GP model we assume that all the finite dimensional distributions \(f(\mathbf{x})\) are normally distributed with \(\mu\) as a mean and \(K_{XX}|\gamma\) as the prior covariance matrix. The covariance (kernel) matrix regulates the smoothness of GPs and its values are implicitly dependent on the kernel hyperparameters \(\gamma\). In this specific case, the estimation of \(f(\mathbf{x})\) can be expressed given by:
 
 \begin{equation}
 \begin{aligned}
@@ -841,13 +859,36 @@ A hat denotes an added diagonal, i.e.~\(\widehat{K}_{XX} = K_{XX} + + \sigma^{2}
 \end{aligned}
 \end{equation}
 
-The main bottleneck for kernel learning is solve the linear system \(\widehat{K}_{XX}^{-1}y\) in equation \ref{eq:3}. The standard approach is to compute the Cholesky decomposition of the matrix \(\widehat{K}_{XX}^{-1}\). The Cholesky decomposition's core algorithm uses a divide-and-conquer approach that is inefficient on GPU acceleration \cite{krishnamoorthy2013matrix}. Furthermore, it requires \(\mathcal{O}(n^{3})\) computation and \(\mathcal{O}(n2)\) storage for GP inference and kernel learning \cite{rasmussen2003gaussian}. To address the above challenges, several approaches to scaling up GP inference have been proposed \cite{gardner2018gpytorch, cunningham2008fast, dong2017scalable, bach2013sharp, wilson2015thoughts}. In this paper, we address the GP inference issue by using the Blackbox Matrix-Matrix multiplication inference (BBMM, \cite{gardner2018gpytorch}). BBMM use preconditioned batched conjugate gradients to solve linear systems, reducing the asymptotic time complexity of GP inference from \(\mathcal{O}(n^{3})\) to \(\mathcal{O}(n^{2})\). Besides, it overcomes memory constraints by divvying the kernel matrix to perform matrix-vector multiplication (MVM, \cite{demmel1997applied}) without having to explicitly construct the kernel matrix, reducing the memory requirement to \(\mathcal{O}(n)\). Finally, BBMM parallelize partitioned MVMs across multiple core, enabling a better use of GPU hardware in comparison to the Cholesky factorization.
+The main bottleneck for kernel learning is solve the linear system \(\widehat{K}_{XX}^{-1}y\) in equation \ref{eq:3}. The standard approach is to compute the Cholesky decomposition of the matrix \(\widehat{K}_{XX}^{-1}\). The Cholesky decomposition's core algorithm uses a divide-and-conquer approach that is inefficient on GPU acceleration (\cite{krishnamoorthy2013matrix}). Furthermore, it requires \(\mathcal{O}(n^{3})\) computation and \(\mathcal{O}(n2)\) storage for GP inference and kernel learning (\cite{rasmussen2003gaussian}). To address the above challenges, several approaches to scaling up GP inference have been proposed (\cite{gardner2018gpytorch, cunningham2008fast, dong2017scalable, bach2013sharp, wilson2015thoughts}). In this paper, we address the GP inference issue by using the Blackbox Matrix-Matrix multiplication inference (BBMM, \cite{gardner2018gpytorch}). BBMM use preconditioned batched conjugate gradients to solve linear systems, reducing the asymptotic time complexity of GP inference from \(\mathcal{O}(n^{3})\) to \(\mathcal{O}(n^{2})\). Besides, it overcomes memory constraints by divvying the kernel matrix to perform matrix-vector multiplication (MVM, \cite{demmel1997applied}) without having to explicitly construct the kernel matrix, reducing the memory requirement to \(\mathcal{O}(n)\). Finally, BBMM parallelize partitioned MVMs across multiple core, enabling a better use of GPU hardware in comparison to the Cholesky factorization.
 
-\subsection{Deep kernel learning}
+\subsection{KISS‑GP}
 
-DKL is a probabilistic deep network that simultaneously learns a feature
-extractor and a Gaussian process on the feature space (cite). The network's
-structure is depicted in Figure \ref{fig:figure02}. The deep non-linear feature extractor \(\mathbf{h(x,w)}\), parametrized by weights \(\mathbf{w}\), is applied to the observed input variable \(\mathbf{x}\). Next, the DNN outputs are modeled using \(\mathcal{GP}\) by:
+Structured kernel interpolation (SKI) or KISS-GP is a scalable Gaussian process variant that combine the use of inducing point (\cite{williams2000using}), structure exploiting (\cite{wilson2014covariance}), and sparse interpolation. The inducing point technique states that we can approximate the exact GP inference using a low-rank kernel given a set of \(m \times n\) data points \(Z\).
+
+\begin{equation}
+K_{XX} \approx K_{XZ}K_{ZZ}^{-1}K_{ZX}
+\label{eq:kiss_01}
+\end{equation}
+
+The inducing points \(Z\) are set on a grid in KISS GP, and the linear systems \(K_{ZZ}^{-1}\) are solved efficiently using either Kronecker or Toeplitz algebra. The \(K_{XZ}\) component which represent the cross covariances for the kernel evaluated at the training \(X\) and inducing inputs points \(Z\) is approximated by interpolating on the covariance matrix \(K_{ZZ}\).
+
+\begin{equation}
+K_{X, Z} \approx WK_{Z, Z}
+\label{eq:kiss_02}
+\end{equation}
+
+where \(W\) is an \(n \times m\) matrix of interpolation weights that
+can be extremely sparse and values are determined using a deterministic interpolation approach, for instance inverse distance weighting. By substituting \(K_{X,Z}\) in Eq. \ref{eq:kiss_01}, we get:
+
+\begin{equation}
+K_{X, X} \approx K_{XZ}K_{ZZ}^{-1}K_{ZX} \approx WK_{Z,Z}K_{ZZ}^{-1}K_{ZZ}W^{T} = WK_{Z,Z}W^{T} = K_{SKI}
+\label{eq:kiss_03}
+\end{equation}
+
+\subsection{Variational Stocastic Deep kernel learning}
+\label{section:vsdkl}
+
+Variational Stocastic Deep kernel learning (VSDKL) is a probabilistic deep network that simultaneously learns a feature extractor and GP parameters. Since run an exact GP with \(509 \times 509 \times 13\) (SEN2 dimensions) is computational intractable. The variational approach directly approximates the mean and covariance in Eq. \ref{eq:2} to determinate the posterior GP parameters by inducing points (\cite{titsias2009variational}). We apply the same sampling approach as in KISS-GP to select the inducing points. The VSDKL network's structure is depicted in Figure \ref{fig:figure02}. The deep non-linear feature extractor \(\mathbf{h(x,w)}\), parametrized by weights \(\mathbf{w}\), is applied to the observed input variable \(\mathbf{X}\). Next, the DNN outputs are modeled using a variational \(\mathcal{GP}\) by:
 
 \begin{equation}
 f(\mathbf{x}) \sim \mathcal{GP}(
@@ -856,9 +897,196 @@ f(\mathbf{x}) \sim \mathcal{GP}(
 )
 \end{equation}
 
-All parameters of the model, including neural network weights \(\mathbf{w}\) and kernel parameters \(\mathbf{\gamma}\), are optimized end-to-end via backpropagation to minimize the negative log marginal likelihood (equation \ref{eq:3}).
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1.1\linewidth]{figures/chapter02/figure03.pdf}
+    \caption{Different cloud types depict in Sentinel-2 imagery.}
+    \label{fig:figure013}
+\end{figure}
 
-\subsection{Variational Deep kernel learning}
+\subsection{Model training}
+
+The complete training procedure is described in Algorithm \ref{algo:algo1}. First,
+we use a geographical block-by-block sampling method to split the dataset into two parts: training and testing. As explained in section \ref{section:vsdkl}, a DKL has two parts: DNN (ResNet-18) and a GP. Following the recommendation of Wilson, we train from scratch first the feature extractor (DNN). The DNN (ResNet-18) was trained to minimize the L1 loss between the cloud cover predictions and the cloud cover obtained derived from human-photo interpretation. The number of minibatch size, momentum, and total iteration is 64, 0.9, and \(10^{6}\), respectively. Instead of adding additional dimensions which increases the risk of feature collapse, the variational GP module is placed directly on top of the last convolutional layer, which is 512 dimensional in the case of the ResNet-18. All parameters of the model, including neural network weights \(\mathbf{w}\) and kernel parameters \(\mathbf{\gamma}\), are optimized end-to-end via backpropagation to minimize the ELBO negative log marginal likelihood.
+
+\begin{algorithm}[!h]
+\caption{Algorithm for training SVDKL}
+\begin{algorithmic}[1]
+\State ResNet-18 (NN) pretrained using cloud cover obtained from the cloudSEN12 high-quality dataset.
+\State Residual NN $f(\theta): x \rightarrow \mathbb{R}^{J}$ with feature space dimensionality J and parameters $\theta$.
+\State Approximate GP with parameters $\varphi = \{l, s, \omega\}$, where $l$ length scale and s output scale of covariance kernel, $\omega$ GP variational parameters.
+\State Set initial inducing points using KISS-GP approach. 
+\For{minibatch $x_b, y_b \subset X, Y$}
+    \State $p(y'_b \mid x_b) \leftarrow \mathcal{GP}(f_{\theta^{'}}(x_b))$
+    \State $\mathcal{L} \leftarrow ELBO_\phi(p(y'_b \mid x_b), y_b)$
+    \State $(\phi, \theta) \leftarrow (\phi, \theta) + \eta *  \nabla_{\phi, \theta} \mathcal{L}$
+\EndFor
+\end{algorithmic}
+\label{algo:algo1}
+\end{algorithm}
+
+\subsection{Model evaluation}
+\label{section:metrics}
+
+Before estimating the effectiveness of the SVDKL in cloud cover estimates, we establish the current state of cloud masking methods by analyzing the similarity between cloud semantic categories (Table \ref{tab:table03}) for cloudSEN12. We established the ``cloud'' and ``non-cloud'' superclasses (Table \ref{tab:table03}) that aggregate thick and thin cloud and clear and cloud shadows classes, respectively. We report the producer's accuracy (PA) as the key error metric to assess the disparities between predicted and expected pixels. Furthermore, we complement this metric with the user's accuracy (UA) and balanced overall accuracy (BOA).
+
+\begin{equation}
+\mathrm{PA}= \frac{TP}{TP + FN}, \\
+\mathrm{UA} = \frac{TP}{TP + FP}, \\
+\mathrm{BOA} = 0.5 \left (PA + \frac{TN}{TN + FP}\right)
+\end{equation}
+
+where \(TP\), \(TN\), \(FP\), and \(FN\) are the true positive, true negative, false positive, and false negative, respectively. High PA values show that cloud pixels have been effectively masked out, whereas high UA values indicate that the algorithm is cautious to exclude non-cloud pixels. High BOA values are related to a good balance of false positives and false negatives.
+
+For cloud cover prediction, the SVDKL and the other reference models available in cloudSEN12 were evaluated using two popular continuous metrics: root mean squared error (RMSE), and mean absolute error (MAE). The RMSE is the most important metric to examine. It is a quadratic scoring that report the relative deviations in absolute terms.
+
+\begin{equation}
+    RMSE = \sqrt{\frac{1}{N}\sum_{i=1}^{n}(\hat{y}_i - y_i)^2}
+\end{equation}
+
+With \(\hat{y}_i\) representing the prediction of the DKL and \(y_i\) the cloud error ground truth at each IP \(i\). The MAE, on the other hand, is a linear score, meaning that all individual differences contribute equally to the average.
+
+\begin{equation}
+    MAE = \frac{1}{N}\sum_{i=1}^{n}\left | \frac{\hat{y}_i - y_i}{n}\right|
+\end{equation}
+
+Since the cloud masking error spans from 0 to 1, the RMSE and MAE will not exceed 1, where values closer to 0 suggesting better model fitting. Additionally, we report the efficiency of the algorithms to correctly classify cloud-free images using filters of 1, 5, 10, and 20\%. Finally, the
+
+Lastly, we assess the validity of the SVDKL probabilistic estimates using the Continuous Ranked Probability Score (CRPS). Continuous ranked probability score (CRPS) contrasts cumulative distribution functions (CDFs) of predicted probabilistic distributions with the ground truth (citar). The CRPS has the same dimension as the ground truth. The formula is as follows:
+
+\begin{equation}
+    \mathrm{CRPS}=\frac{1}{N} \sum_{t}^{N} \int(P(\widehat{B}(t) \leq x)-P(B(t) \leq x))^{2} \mathrm{~d} x
+\end{equation}
+
+where \(P(\widehat{B}(t) \leq x)\) are the CDFs of the probabilistic forecasts, and \(P(B(t) \leq x)\) are the ``CDFs'' of the observations. Since SVDKL is gaussian processes based model, the definition of CRPS assume a normally distribution in \((P(\widehat{B}(t) \leq x)\) estimates. The \(P(B(t) \leq x)\) is estimated by the empirical CDF, which is regarded as a step function because the data are discrete values. A lower CRPS score suggests improved uncertainty estimation performance. A lower CRPS values suggest that the uncertainty estimation performed better.
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+\label{section:results}
+
+\subsection{Cloud masking}
+
+The Figure \ref{fig:figurexx01} and Table \ref{tab:table66} show BOA, PA, and UA density error curves and summary statistics for the first experiment. For all algorithms, BOA and PA values exhibited a well-defined binomial error distribution with peak modes of different intensities. Taking only into account the three algorithms with the highest BOA (KappaMask L2A, Fmask, and KappaMask L1C), we found that the mode of the secondary peak is close to 0.5 and 0 for BOA and PA, respectively. At least 5 \% of the total IPs are contained by this secondary distribution (see PA\(_{low}\) in Table \ref{tab:table66}). On the other side, the major peak's mode is close to 0.90 and 0.95 for BOA and PA, holding the 66 \% of the IPs (see PA\(_{high}\) in Table \ref{tab:table66}). These results indicate that more than half of cloud pixels are easily recognizable. A simple visual examination reveals that semitransparent clouds are the primary cause of the secondary peak's formation. Low-thickness clouds, such as cirrus and haze tend to produce more omission errors independent of the cloud detection algorithm. This can be explained because modules for semitransparent clouds are simply a conservative threshold in the cirrus band (B10). Besides, semitransparent clouds are either ignored or unfairly represented in most datasets \cite{CMIX}. This particular flaw does not occur in cloudSEN12. Therefore, a simple regional adjustment of semitransparent cloud module parameters using this dataset should bring a significant improvement. Figure \ref{fig:figurexx01} demonstrates furthermore that not all algorithms exhibit the same behaviour. On the basis of the PA and UA metrics, we may differentiate between two types of algorithms: cloud conservative (CD-FCNN, QA60, and Sen2Cor) and non-cloud conservative (KappaMask, Fmask, and s2cloudless).
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=0.98\linewidth]{figures/chapter02/figure04.png}
+    \caption{
+    BOA, PA, and UA comparison for the cloudSEN12 dataset. The upper figure depicts BOA density estimations for all cloudSEN12 IPs high-quality. The colors reflect the tail probability estimated by $0.5 - abs(0.5 - ecdf)$. The vertical black lines drawn represent the first, second, and third quartiles, respectively.
+    The heatlines in the lower figure shows the PA and UA value distribution. The red stars shows the median and the gray lines the 25th and 75th percentiles.
+    }
+    \label{fig:figurexx01}
+\end{figure}
+
+The first group exhibits high UA values at the expense of worsening PA. As observed in the PA heatline plot, these algorithms show a pronounced bimodal distribution and a wide interquartile range, with more than half of the IPs exhibiting PA values below 0.5. Considering the high temporal resolution of SEN2 imagery, it seems unsuitable to utilize cloud-conservative techniques, except for extremely cloudy regions where each clear pixel is crucial \cite{CMIX}. On the other hand, in non-cloud conservative algorithms, over half of all IPs have PA values greater than 0.9 (see column PA\(_{high}\) in Table \ref{tab:table66}), but as a result, the UA\(_{high}\) metric decrease significantly. Based on BOA estimates, we may conclude that QA60 is the most unreliable algorithm, failing to distinguish both cloud and non-cloud pixels. Whereas, KappaMask level 2A is clearly the best at detecting clouds, even semitransparent clouds that other algorithms usually overlook. However, the main drawback of KappaMask level 2A is that it quite overestimates clouds under specific land cover types, such as mountains, open/enclosed water bodies, and coastal environments. It explains why almost 70 \% of all IPs present a UA metric below 0.9 (see Table \ref{tab:table66} and Figure \ref{fig:figurexx01}). Considering that the L1C and L2A versions of KappaMask are trained on a relatively small dataset from Northern Europe, it is expected that utilizing a larger dataset should lead to better results. Finally, Fmask, KappaMask level 1C, and s2cloudlless provide a more balanced and stable solution, with inaccuracies evenly distributed across different cloud types and land covers. Hence it makes them suitable for creating cloud-free composites over broad areas.
+
+\begin{table}[!h]
+\centering
+\caption{Percentage of IPs with PA or UA metric values below to 0.1 (low), between 0.1 and 0.9 (int), and above 0.9 (high).}
+\label{tab:table66}
+\resizebox{\textwidth}{!}{
+\begin{tabular}{|l|l|l|l|l|l|l|l|}
+\hline
+\textbf{Experiment} & \textbf{CD algorithm} & \textbf{PA$_{low} \%$} & \textbf{PA$_{int}$ \%} & \textbf{PA$_{high}$ \%} & \textbf{UA$_{low}$ \%} & \textbf{UA$_{int}$ \%} & \textbf{UA$_{high}$ \%} \\ \hline
+\textbf{First} & \textbf{KappaMask L2A} & \textbf{2.22} & \textbf{29.87} & \textbf{67.91} & 0.96 & 67.76 & 31.28 \\ \cline{2-8}
+ & \textbf{Fmask} & 5.22 & 38.37 & 56.41 & \textbf{0.19} & 53.56 & 46.25 \\ \cline{2-8}
+ & \textbf{KappaMask L1C} & 3.49 & 43.24 & 53.27 & 0.48 & 41.82 & 57.7 \\ \cline{2-8}
+ & \textbf{s2cloudless} & 5.41 & 49.75 & 44.84 & 0.22 & 37.94 & 61.85 \\ \cline{2-8}
+ & \textbf{Sen2Cor} & 10.21 & 62.76 & 27.02 & 0.62 & 26.72 & 72.65 \\ \cline{2-8}
+ & \textbf{CD-FCNN II} & 15.54 & 69.8 & 14.66 & 0.58 & 13.8 & 85.62 \\ \cline{2-8}
+ & \textbf{QA60} & 21.36 & 50.31 & 28.33 & 0.58 & 43.25 & 56.17 \\ \cline{2-8}
+ & \textbf{CD-FCNN I} & 17.71 & 71.34 & 10.95 & 1.04 & \textbf{12.88} & \textbf{86.08} \\ \hline
+\textbf{Second} & \textbf{KappaMask L2A} & 40.04 & 57.06 & 2.9 & 14.71 & 38.86 & 46.43 \\ \cline{2-8}
+ & \textbf{KappaMask L1C} & 29.93 & 58.59 & \textbf{11.48} & 21.89 & 61.27 & 16.85 \\ \cline{2-8}
+ & \textbf{Sen2Cor} & 63.76 & \textbf{35.88} & 0.36 & \textbf{9.27} & \textbf{18.64} & \textbf{72.09} \\ \cline{2-8}
+ & \textbf{Fmask} & \textbf{22.56} & 74.84 & 2.59 & 17.57 & 76.48 & 5.95 \\ \hline
+\end{tabular}
+}
+\end{table}
+
+\subsection{Cloud cover}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+\begin{table}[!h]
+\centering
+\caption{dasdasdasd}
+\label{tab:my-table}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{l|l|l|l|l|l|l|l|l|l|}
+\cline{2-10}
+ & \textbf{Model} & \textbf{MAE} & \textbf{RMSE} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF 1\textgreater\\ PA\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF 5\textgreater\\ PA\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF 10\textgreater\\ PA\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF \textgreater 1\\ UA\end{tabular}}} & \textbf{\begin{tabular}[c]{@{}l@{}}CF \textgreater 5\\ UA\end{tabular}} & \textbf{\begin{tabular}[c]{@{}l@{}}CF \textgreater 10\\ UA\end{tabular}} \\ \hline
+\multicolumn{1}{|l|}{\multirow{4}{*}{\textbf{CloudSEN12}}} & ResNet-18 & \textbf{0.072} & \textbf{0.133} & \textbf{0.918} & \textbf{0.935} & \textbf{0.950} & 0.749 & \textbf{0.697} & \textbf{0.631} \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & DKL & \textbf{0.081} & \textbf{0.147} & 0.730 & 0.794 & 0.825 & 0.702 & 0.610 & 0.540 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & DKL + sigma & 0.145 & 0.184 & 0 & 0 & 0.202 & 0 & 0 & 0.766 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & DKL - sigma & 0.145 & 0.184 & 0.907 & 0.924 & 0.940 & 0.480 & 0.438 & 0.396 \\ \hline
+\multicolumn{1}{|l|}{\multirow{3}{*}{\begin{tabular}[c]{@{}l@{}}Knowledge\\ Driven\end{tabular}}} & Fmask & 0.115 & 0.208 & \textbf{0.853} & \textbf{0.901} & 0.901 & 0.789 & 0.633 & 0.537 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & Sen2Cor & 0.161 & 0.251 & 0.763 & 0.830 & 0.862 & 0.653 & 0.488 & 0.411 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & QA60 & 0.194 & 0.295 & 0.825 & 0.851 & 0.859 & 0.52 & 0.436 & 0.380 \\ \hline
+\multicolumn{1}{|l|}{\multirow{5}{*}{\textbf{\begin{tabular}[c]{@{}l@{}}Data\\ Driven\end{tabular}}}} & KappaMask L1C & 0.131 & 0.241 & 0.721 & 0.772 & 0.808 & \textbf{0.815} & 0.630 & 0.528 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & KappaMask L2A & 0.199 & 0.317 & 0.501 & 0.603 & 0.648 & \textbf{0.813} & \textbf{0.66} & \textbf{0.568} \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & s2cloudless & 0.116 & 0.194 & 0.792 & \textbf{0.901} & \textbf{0.930} & 0.753 & 0.593 & 0.509 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & \begin{tabular}[c]{@{}l@{}}DL-L8S2-UV \\ RGB\end{tabular} & 0.211 & 0.311 & 0.361 & 0.507 & 0.583 & 0.800 & 0.629 & 0.551 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & \begin{tabular}[c]{@{}l@{}}DL-L8S2-UV \\ RGBSWIR\end{tabular} & 0.195 & 0.288 & 0.402 & 0.521 & 0.597 & 0.812 & 0.625 & 0.538 \\ \hline
+\end{tabular}%
+}
+\end{table}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1.1\linewidth]{figures/chapter02/figure05.png}
+    \caption{TODO}
+    \label{fig:figurexy01}
+\end{figure}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1.1\linewidth]{figures/chapter02/figure06.png}
+    \caption{TODO}
+    \label{fig:figurexy02}
+\end{figure}
+
+\subsection{Model uncertainty}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1.1\linewidth]{figures/chapter02/latent_space.png}
+    \caption{TODO}
+    \label{fig:figurexy03}
+\end{figure}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+\begin{figure}[!h]
+    \centering
+    \includegraphics[width=1.1\linewidth]{figures/chapter02/uncertainty.pdf}
+    \caption{TODO}s
+    \label{fig:figurexy04}
+\end{figure}
+
+\hypertarget{discussions}{%
+\section{Discussions}\label{discussions}}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+
+\hypertarget{conclusions}{%
+\section{Conclusions}\label{conclusions}}
+
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
+TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 
 \begin{savequote}
 I may not have lived long, but I am certain of one thing. If there is a
