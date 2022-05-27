@@ -32,8 +32,8 @@ This first appendix includes the non-stationary gaussian processes in Gpytorch:
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=1\linewidth]{figures/extra/figureS2.png}
-	\caption{XXXX}
-	\label{fig:figureS02}
+	\caption{IRIS (Intelligently Reinforced Image Segmentation) graphical user interface. There are seven feature bars in it. A) Edit and navigation bar. B) Select drawing semantic classes. C) Draw bar; the last bottom executes the GBDT algorithm that filling out the mask using prior manual annotations, D) Testing bar, it helps to compare human and AI annotations. F) Image metadata, it display image thumbnail and location using Google maps. E) Image contrast bar which change image brightness and saturation. G) Machine learning summary support, that shows GBDT performance metrics.}
+	\label{fig:figureS01}
 \end{figure}
 
 
@@ -41,8 +41,8 @@ This first appendix includes the non-stationary gaussian processes in Gpytorch:
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=1\linewidth]{figures/extra/figureS3.png}
-	\caption{XXXX}
-	\label{fig:figureS03}
+	\caption{Three main cloudApp panels. A) Display time series for Blue, SWIR1 bands and NDVI for all images in a one-year moving window. B) Inspect image thumbnails; the white circle's values are averaged and displayed in panel A. C) Map display for showing the image patch's centroid.}
+	\label{fig:figureS02}
 \end{figure}
 
 

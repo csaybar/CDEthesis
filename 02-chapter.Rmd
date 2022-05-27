@@ -221,7 +221,7 @@ The first group exhibits high UA values at the expense of worsening PA. As obser
 
 \begin{table}[!h]
 \centering
-\caption{Percentage of IPs with PA or UA metric values below to 0.1 (low), between 0.1 and 0.9 (int), and above 0.9 (high).}
+\caption{Metrics based on the percentage of IPs with PA/UA values less than 0.1 (low), 0.1 to 0.9 (middle), and more than 0.9 (high). Values closest to one in the "high" group are better, whereas values close to zero in the other two groups are the ideal. The best values for each metric have been highlighted in bold.}
 \label{tab:table66}
 \resizebox{\textwidth}{!}{
 \begin{tabular}{|l|l|l|l|l|l|l|l|}
@@ -246,19 +246,19 @@ The first group exhibits high UA values at the expense of worsening PA. As obser
 
 \subsection{Cloud cover}
 
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
+The Table \ref{tab:ccover_table} and Figure \ref{fig:figurexy01}
+
 
 \begin{table}[!h]
 \centering
-\caption{dasdasdasd}
-\label{tab:my-table}
-\resizebox{\textwidth}{!}{%
+\caption{Benchmarking of cloud cover methods. The best two values for each metric have been highlighted in bold. CF means cloud-free.}
+\label{tab:ccover_table}
+\resizebox{\textwidth}{!}{
 \begin{tabular}{l|l|l|l|l|l|l|l|l|l|}
 \cline{2-10}
  & \textbf{Model} & \textbf{MAE} & \textbf{RMSE} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF 1\textgreater\\ PA\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF 5\textgreater\\ PA\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF 10\textgreater\\ PA\end{tabular}}} & \multicolumn{1}{c|}{\textbf{\begin{tabular}[c]{@{}c@{}}CF \textgreater 1\\ UA\end{tabular}}} & \textbf{\begin{tabular}[c]{@{}l@{}}CF \textgreater 5\\ UA\end{tabular}} & \textbf{\begin{tabular}[c]{@{}l@{}}CF \textgreater 10\\ UA\end{tabular}} \\ \hline
-\multicolumn{1}{|l|}{\multirow{4}{*}{\textbf{CloudSEN12}}} & ResNet-18 & \textbf{0.072} & \textbf{0.133} & \textbf{0.918} & \textbf{0.935} & \textbf{0.950} & 0.749 & \textbf{0.697} & \textbf{0.631} \\ \cline{2-10} 
-\multicolumn{1}{|l|}{} & DKL & \textbf{0.081} & \textbf{0.147} & 0.730 & 0.794 & 0.825 & 0.702 & 0.610 & 0.540 \\ \cline{2-10} 
+\multicolumn{1}{|l|}{\multirow{4}{*}{\textbf{CloudSEN12}}} & ResNet-18 & \textbf{0.069} & \textbf{0.123} & \textbf{0.918} & \textbf{0.935} & \textbf{0.950} & 0.749 & \textbf{0.697} & \textbf{0.631} \\ \cline{2-10} 
+\multicolumn{1}{|l|}{} & DKL & \textbf{0.080} & \textbf{0.147} & 0.019 & 0.479 & 0.763 & 0.636 & 0.776 & 0.676 \\ \cline{2-10} 
 \multicolumn{1}{|l|}{} & DKL + sigma & 0.145 & 0.184 & 0 & 0 & 0.202 & 0 & 0 & 0.766 \\ \cline{2-10} 
 \multicolumn{1}{|l|}{} & DKL - sigma & 0.145 & 0.184 & 0.907 & 0.924 & 0.940 & 0.480 & 0.438 & 0.396 \\ \hline
 \multicolumn{1}{|l|}{\multirow{3}{*}{\begin{tabular}[c]{@{}l@{}}Knowledge\\ Driven\end{tabular}}} & Fmask & 0.115 & 0.208 & \textbf{0.853} & \textbf{0.901} & 0.901 & 0.789 & 0.633 & 0.537 \\ \cline{2-10} 
@@ -280,7 +280,9 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=1.1\linewidth]{figures/chapter02/figure05.png}
-	\caption{TODO}
+	\caption{
+	Residual density estimations for all cloudSEN12 IPs high-quality in the test dataset.
+	y. The colors reflect the tail probability estimated by $0.5 - abs(0.5 - ecdf)$.}
 	\label{fig:figurexy01}
 \end{figure}
 
@@ -291,8 +293,8 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=1.1\linewidth]{figures/chapter02/figure06.png}
-	\caption{TODO}
+	\includegraphics[width=0.8\linewidth]{figures/chapter02/figure06.png}
+	\caption{PA vs UA curves for the SVDKL and ResNet-18. The 1, 5, and 10 thresholds are represented by black spots on the plot. The double points represent the best value for UA and PA, based on a rule of two and one, respectively.}
 	\label{fig:figurexy02}
 \end{figure}
 
@@ -301,25 +303,16 @@ TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=1.1\linewidth]{figures/chapter02/latent_space.png}
-	\caption{TODO}
-	\label{fig:figurexy03}
+	\includegraphics[width=0.75\linewidth]{figures/chapter02/figure07.png}
+	\caption{Summary of the urcentainty results for the SVDKL. A) A principal component analysis (PCA) 
+	on the last layer of ResNet-18, colors represents the cloud coverage. B) Coefficient of variation. C)     CRPS.}
+	\label{fig:figurexy02}
 \end{figure}
 
-
 TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO 
-
-\begin{figure}[!h]
-	\centering
-	\includegraphics[width=1.1\linewidth]{figures/chapter02/uncertainty.pdf}
-	\caption{TODO}s
-	\label{fig:figurexy04}
-\end{figure}
 
 ## Discussions
 
